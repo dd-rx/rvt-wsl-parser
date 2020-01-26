@@ -19,7 +19,8 @@
 ##  DESCRIPTION
 
 #   !THIS IS WORK IN PROGRESS!
-#   this is a parser vor revit worksharingjournals (*.slog)
+#   this is a parser vor revit worksharingjournals (*.slog) to make it human-readable.
+#   later it should allow to disect the data by user or event and get timing on events.
 #
 #   repo: https://bitbucket.org/ddrx/revit-worksharingjournal-reader/src/master/
 
@@ -39,13 +40,7 @@
 #   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-# -------------------------------------------#
-
-##  SET UP TIMER
-starttime = datetime.now()
-
-
-# -------------------------------------------#
+# ------------------------------------------- #
 
 ##  IMPORTS
 import re
@@ -53,10 +48,25 @@ import codecs  # codecs needed for python 2
 from datetime import datetime
 
 
-# -------------------------------------------#
+# ------------------------------------------- #
+
+##  SET UP TIMER
+starttime = datetime.now()
+
+
+# ------------------------------------------- #
 
 ##  REGEX
 # !!! gingercareful: depending on python implementation named groups are defined by ?<foo> ?P<foo> or maybe others. assigned as raw bytes.
+
+
+# trying to make the regex modular...not sure if worth the mess.
+regex_base = r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3})."""
+regex_select_allevents = r"""(?P<type>\>|\<|\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
+regex = re.compile(
+    regex_base
+    + regex_select_allevents
+)
 
 # grab session informations to assign user to sessionID, also get build version and the host....
 regex_sid = re.compile(
@@ -78,7 +88,14 @@ regex_stc = re.compile(
 )
 
 
-# -------------------------------------------#
+#
+#   "We interrupt this program to annoy you
+#   and make things generally more irritating."
+#                       -Monty Python's Flying Circus
+#
+
+
+# ------------------------------------------- #
 
 ##  READING DATA
 
@@ -90,8 +107,8 @@ wsj.close()
 
 # getting user sessiondata
 sessiondata = regex_sid.findall(wsjdata, re.MULTILINE)
-# getting events (see above)
-journaldatatuples = regex_stc.findall(wsjdata)
+# getting events (change regex*, see above)
+journaldatatuples = regex.findall(wsjdata)
 
 ##  processing data
 
@@ -108,7 +125,7 @@ for event in journaldata:
     event[1] = datetime.strptime(event[1], "%Y-%m-%d").date()
     event[2] = datetime.strptime(event[2], "%H:%M:%S").time()
 
-# -------------------------------------------#
+# ------------------------------------------- #
 
 
 ##  DELIVERING RESULTS
@@ -134,7 +151,7 @@ for event in journaldata[-10:]:  # [-10:] last 10 entries
 # print([list(i) for i in journaldata])
 
 
-# -------------------------------------------#
+# ------------------------------------------- #
 
 ##  PRINT RUNTIME
 print("\nruntime:")
