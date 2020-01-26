@@ -49,7 +49,7 @@ starttime = datetime.now()
 
 # read WorkSharingJournal
 wsj = codecs.open(
-    r"""#filepath""",
+    r"""./sampledata/sample.slog""",
     "r",
     encoding="utf-16",
 )
