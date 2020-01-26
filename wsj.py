@@ -1,19 +1,20 @@
-#   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#   ~~~~~~~$$\~~~~~~~$$\~~~~~~~~~~~~~~~~~~~~~
-#   ~~~~~~~$$~|~~~~~~$$~|~~~~~~~~~~~~~~~~~~~~
-#   ~~$$$$$$$~|~$$$$$$$~|~$$$$$$\~$$\~~~$$\~~
-#   ~$$~~__$$~|$$~~__$$~|$$~~__$$\\$$\~$$~~|~
-#   ~$$~/~~$$~|$$~/~~$$~|$$~|~~\__|\$$$$~~/~~
-#   ~$$~|~~$$~|$$~|~~$$~|$$~|~~~~~~$$~~$$<~~~
-#   ~\$$$$$$$~|\$$$$$$$~|$$~|~~~~~$$~~/\$$\~~
-#   ~~\_______|~\_______|\__|~~~~~\__/~~\__|~
-#   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#   ~~~~~~~~~~ deductive reasoning ~~~~~~~~~~
+#   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#   ~~~~~~~~~##\~~~~~~~##\~~~~~~~~~~~~~~~~~~~~~~~
+#   ~~~~~~~~~## |~~~~~~## |~~~~~~~~~~~~~~~~~~~~~~
+#   ~~~~####### |~####### |~######\~##\~~~##\~~~~
+#   ~~~##  __## |##  __## |##  __##\\##\~##  |~~~
+#   ~~~## /~~## |## /~~## |## |~~\__|\####  /~~~~
+#   ~~~## |~~## |## |~~## |## |~~~~~~##  ##<~~~~~
+#   ~~~\####### |\####### |## |~~~~~##  /\##\~~~~
+#   ~~~~\_______|~\_______|\__|~~~~~\__/~~\__|~~~
+#   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#   ~~~~~~~~~~~~ deductive reasoning ~~~~~~~~~~~~
 
 #   copyright 2020 by m.wild for ddrx
-#   contact: ddrx@donotstalk.me
+#   contact ddrx@donotstalk.me
+#   repo https://bitbucket.org/ddrx/revit-worksharingjournal-reader/
 
-#   last updated 26/01/2020
+#   last updated: 26/01/2020
 
 
 ##  DESCRIPTION
@@ -22,7 +23,8 @@
 #   this is a parser vor revit worksharingjournals (*.slog) to make it human-readable.
 #   later it should allow to disect the data by user or event and get timing on events.
 #
-#   repo: https://bitbucket.org/ddrx/revit-worksharingjournal-reader/src/master/
+#   Autodesk Knowledge Network: https://knowledge.autodesk.com/support/revit-products/troubleshooting/caas/simplecontent/content/how-to-read-the-revit-worksharing-log-slog-file.html
+#
 
 ##  LICENSE AGREEMENT
 
@@ -61,12 +63,9 @@ starttime = datetime.now()
 
 
 # trying to make the regex modular...not sure if worth the mess.
-regex_base = r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3})."""
-regex_select_allevents = r"""(?P<type>\>|\<|\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
-regex = re.compile(
-    regex_base
-    + regex_select_allevents
-)
+#regex_base = r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3})."""
+#regex_select_allevents = r"""(?P<type>\>|\<|\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
+#regex = re.compile(regex_base + regex_select_allevents)
 
 # grab session informations to assign user to sessionID, also get build version and the host....
 regex_sid = re.compile(
@@ -88,11 +87,11 @@ regex_stc = re.compile(
 )
 
 
-#
-#   "We interrupt this program to annoy you
-#   and make things generally more irritating."
-#                       -Monty Python's Flying Circus
-#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#   "We interrupt this program to annoy you       #
+#   and make things generally more irritating."   #
+#            -Monty Python's Flying Circus        #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 
 # ------------------------------------------- #
@@ -101,14 +100,14 @@ regex_stc = re.compile(
 
 # read WorkSharingJournal
 # !!! opening UCS-2-LE .slog as UTF-16-LE ... *duck&run*
-wsj = codecs.open(r"""./sampledata/sample.slog""", "r", encoding="utf-16",)
+wsj = codecs.open(r"""./sampledata/sample.slog""", "r", encoding="utf-16")
 wsjdata = wsj.read()
 wsj.close()
 
 # getting user sessiondata
 sessiondata = regex_sid.findall(wsjdata, re.MULTILINE)
 # getting events (change regex*, see above)
-journaldatatuples = regex.findall(wsjdata)
+journaldatatuples = regex_stc.findall(wsjdata)
 
 ##  processing data
 
