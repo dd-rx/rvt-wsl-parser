@@ -45,6 +45,7 @@
 # ------------------------------------------- #
 
 ##  IMPORTS
+
 import re
 import codecs  # codecs needed for python 2
 from datetime import datetime
@@ -53,6 +54,7 @@ from datetime import datetime
 # ------------------------------------------- #
 
 ##  SET UP TIMER
+
 starttime = datetime.now()
 
 
@@ -62,10 +64,17 @@ starttime = datetime.now()
 # !!! gingercareful: depending on python implementation named groups are defined by ?<foo> ?P<foo> or maybe others. assigned as raw bytes.
 
 
-# trying to make the regex modular...not sure if worth the mess.
-#regex_base = r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3})."""
-#regex_select_allevents = r"""(?P<type>\>|\<|\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
-#regex = re.compile(regex_base + regex_select_allevents)
+# trying to make the regex modular...
+# regex_base is reused for all patterns. gets sessionid date time
+regex_base = r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3})."""
+
+# different selectors
+regex_select_allevents = r"""(?P<type>\>|\<|\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
+regex_select_stcstl = r"""(?P<type>\>|\<)(?P<event>STC:STL)\r"""
+regex_select_stc = r"""(?P<type>\>|\<)(?P<event>STC)\r"""
+
+# put the regex together. change the second part
+regex = re.compile(regex_base + regex_select_allevents)
 
 # grab session informations to assign user to sessionID, also get build version and the host....
 regex_sid = re.compile(
@@ -73,18 +82,18 @@ regex_sid = re.compile(
 )
 
 # grab all events/transaction and split into groups. !!! parameter currently always has to leading whitespaces!
-regex_allevents = re.compile(
-    r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3}).(?P<type>\>|\<|\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
-)
+# regex_allevents = re.compile(
+#    r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3}).(?P<type>\>|\<|\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
+# )
 # grab only "save local before/after sync" events
-regex_stcstl = re.compile(
-    r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3}).(?P<type>\>|\<)(?P<event>STC:STL)\r"""
-)
+# regex_stcstl = re.compile(
+#    r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3}).(?P<type>\>|\<)(?P<event>STC:STL)\r"""
+# )
 
 # grab only "save local before/after sync" events
-regex_stc = re.compile(
-    r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3}).(?P<type>\>|\<)(?P<event>STC)\r"""
-)
+# regex_stc = re.compile(
+#    r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3}).(?P<type>\>|\<)(?P<event>STC)\r"""
+# )
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -106,19 +115,20 @@ wsj.close()
 
 # getting user sessiondata
 sessiondata = regex_sid.findall(wsjdata, re.MULTILINE)
-# getting events (change regex*, see above)
-journaldatatuples = regex_stc.findall(wsjdata)
+# getting events (set regex above)
+journaldatatuples = regex.findall(wsjdata)
 
 ##  processing data
 
 # tuple to list
 journaldata = [list(tuple) for tuple in journaldatatuples]
 
-# replace sessionid with user | #TODO to be rewritten...but works.
+# replace sessionid with username
 for session in sessiondata:
     for event in journaldata:
         if event[0] == session[0]:
             event[0] = event[0].replace(event[0], session[3])
+
 # sanitized date/time | #TODO refactoring needed check: https://www.geeksforgeeks.org/python-iterate-multiple-lists-simultaneously/
 for event in journaldata:
     event[1] = datetime.strptime(event[1], "%Y-%m-%d").date()
@@ -153,6 +163,7 @@ for event in journaldata[-10:]:  # [-10:] last 10 entries
 # ------------------------------------------- #
 
 ##  PRINT RUNTIME
-print("\nruntime:")
+
 endtime = datetime.now()
+print("\nruntime:")
 print(endtime - starttime)
