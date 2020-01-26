@@ -18,7 +18,7 @@
 
 ##  DESCRIPTION
 
-#   WORK IN PROGRESS!!
+#   THIS IS WORK IN PROGRESS!
 #   this is a parser vor revit worksharingjournals (*.slog)
 #
 #   repo: https://bitbucket.org/ddrx/revit-worksharingjournal-reader/src/master/
