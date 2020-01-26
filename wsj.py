@@ -17,14 +17,14 @@
 
 
 ##  DESCRIPTION
-#
+
 #   WORK IN PROGRESS!
 #   this is a parser vor revit worksharingjournals (*.slog)
 #
 #   repo: https://bitbucket.org/ddrx/revit-worksharingjournal-reader/src/master/
 
 ##  LICENSE AGREEMENT
-#
+
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
 #   the Free Software Foundation, either version 3 of the License, or
@@ -132,6 +132,9 @@ for event in journaldata[-10:]:  # [-10:] last 10 entries
     print(event)
 
 # print([list(i) for i in journaldata])
+
+
+# -------------------------------------------#
 
 ##  PRINT RUNTIME
 print("\nruntime:")
