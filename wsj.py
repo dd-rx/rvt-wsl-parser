@@ -14,7 +14,7 @@
 #   contact ddrx@donotstalk.me
 #   repo https://bitbucket.org/ddrx/revit-worksharingjournal-reader/
 
-#   last updated: 26/01/2020
+#   last updated: 27/01/2020
 
 
 ##  DESCRIPTION
@@ -45,11 +45,10 @@
 # ------------------------------------------- #
 
 ##  IMPORTS
-
 import re
 import codecs  # codecs needed for python 2
 from datetime import datetime
-
+from datetime import
 
 # ------------------------------------------- #
 
@@ -123,9 +122,14 @@ journaldatatuples = regex.findall(wsjdata)
 # tuple to list
 journaldata = [list(tuple) for tuple in journaldatatuples]
 
-# replace sessionid with username
+# make entries usable
 for session in sessiondata:
     for event in journaldata:
+        #sanitize date and time / nope.
+        #if not isinstance(event[1],datetime.date):
+        #    event[1]= datetime.strptime(event[1], "%Y-%m-%d").date()
+        #    event[2] = datetime.strptime(event[2], "%H:%M:%S").time()
+        #replace sessionid with username
         if event[0] == session[0]:
             event[0] = event[0].replace(event[0], session[3])
 
