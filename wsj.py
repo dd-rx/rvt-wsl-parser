@@ -11,10 +11,10 @@
 #   ~~~~~~~~~~~~ deductive reasoning ~~~~~~~~~~~~
 
 #   copyright 2020 by m.wild for ddrx
-#   contact ddrx@donotstalk.me
+#   contact mail@ddrx.ch
 #   repo https://bitbucket.org/ddrx/revit-worksharingjournal-reader/
 
-#   last updated: 27/01/2020
+#   last updated: 29/01/2020
 
 
 ##  DESCRIPTION
@@ -46,9 +46,8 @@
 
 ##  IMPORTS
 import re
-import codecs  # codecs needed for python 2
+import codecs
 from datetime import datetime
-from datetime import
 
 # ------------------------------------------- #
 
@@ -68,16 +67,18 @@ starttime = datetime.now()
 regex_base = r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3})."""
 
 # different selectors
-regex_select_allevents = r"""(?P<type>\>|\<|\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
+regex_select_all = r"""(?P<type>\>|\<|\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
+regex_select_alltransactions = r"""(?P<type>\>|\<)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
+regex_select_allevents = r"""(?P<type>\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
 regex_select_stcstl = r"""(?P<type>\>|\<)(?P<event>STC:STL)\r"""
 regex_select_stc = r"""(?P<type>\>|\<)(?P<event>STC)\r"""
 
 # put the regex together. change the second part
-regex = re.compile(regex_base + regex_select_allevents)
+regex = re.compile(regex_base + regex_select_alltransactions)
 
 # grab session informations to assign user to sessionID, also get build version and the host....
 regex_sid = re.compile(
-    r"""(?P<sid>\$.[0-9a-fA-F]{7}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2}).*\n\s\buser\=.(?P<user>\b.*\b).*\n\s\bbuild\=.(?P<build>\b.*\b.).*\n\s\bjournal\=.(?P<journal>\b.*\b).*\n\s\bhost\=.(?P<host>.*.)"""
+    r"""(?P<sid>\$.[0-9a-fA-F]{7}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2}).*\n\s\buser\=.(?P<user>\b.*\b).*\n\s\bbuild\=.(?P<build>\b.*\b.).*\n\s\bjournal\=.(?P<journal>\b.*\b).*\n\s\bhost\=(?P<host>.*.)\r"""
 )
 
 # grab all events/transaction and split into groups. !!! parameter currently always has to leading whitespaces!
@@ -115,28 +116,31 @@ wsj.close()
 # getting user sessiondata
 sessiondata = regex_sid.findall(wsjdata, re.MULTILINE)
 # getting events (set regex above)
-journaldatatuples = regex.findall(wsjdata)
+journaldata = regex.findall(wsjdata)
 
 ##  processing data
 
 # tuple to list
-journaldata = [list(tuple) for tuple in journaldatatuples]
+sessiondata = [list(tuple) for tuple in sessiondata]
+journaldata = [list(tuple) for tuple in journaldata]
 
-# make entries usable
+# assign user to session
 for session in sessiondata:
-    for event in journaldata:
-        #sanitize date and time / nope.
-        #if not isinstance(event[1],datetime.date):
-        #    event[1]= datetime.strptime(event[1], "%Y-%m-%d").date()
-        #    event[2] = datetime.strptime(event[2], "%H:%M:%S").time()
-        #replace sessionid with username
-        if event[0] == session[0]:
-            event[0] = event[0].replace(event[0], session[3])
+    for entry in journaldata:
+        if entry[0] == session[0]:
+            entry.insert(1, session[3])
+            # event[0] = event[0].replace(event[0], session[3])
 
-# sanitized date/time | #TODO refactoring needed check: https://www.geeksforgeeks.org/python-iterate-multiple-lists-simultaneously/
-for event in journaldata:
-    event[1] = datetime.strptime(event[1], "%Y-%m-%d").date()
-    event[2] = datetime.strptime(event[2], "%H:%M:%S").time()
+# finessing data | #TODO refactoring needed check: https://www.geeksforgeeks.org/python-iterate-multiple-lists-simultaneously/
+for session in sessiondata:
+    session[1] = datetime.strptime(session[1], "%Y-%m-%d").date()
+    session[2] = datetime.strptime(session[2], "%H:%M:%S").time()
+for entry in journaldata:
+    entry[2] = datetime.strptime(entry[2], "%Y-%m-%d").date()
+    entry[3] = datetime.strptime(entry[3], "%H:%M:%S").time()
+
+    if entry[6]:
+        entry[6] = entry[6][2:]
 
 # ------------------------------------------- #
 
@@ -144,22 +148,23 @@ for event in journaldata:
 ##  DELIVERING RESULTS
 
 for session in sessiondata:
-    print(
-        session[0]
-        + " "
-        + session[3]
-        + " "
-        + session[1]
-        + " "
-        + session[2]
-        + " "
-        + session[4]
-    )
+    print(session)
+    # print(
+    #     session[0]
+    #     + " "
+    #     + session[3]
+    #     + " "
+    #     + session[1]
+    #     + " "
+    #     + session[2]
+    #     + " "
+    #     + session[4]
+    # )
 
 print("---")
 
-for event in journaldata[-10:]:  # [-10:] last 10 entries
-    print(event)
+for entry in journaldata[-10:]:  # [-10:] last 10 entries
+    print(entry)
 
 # print([list(i) for i in journaldata])
 
