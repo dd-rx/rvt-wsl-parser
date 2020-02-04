@@ -14,7 +14,7 @@
 #   contact mail@ddrx.ch
 #   repo https://bitbucket.org/ddrx/revit-worksharingjournal-reader/
 
-#   last updated: 29/01/2020
+#   last updated: 04/02/2020
 
 
 ##  DESCRIPTION
@@ -69,9 +69,7 @@ regex_base = r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).
 # different selectors
 regex_select_all = r"""(?P<action>\>|\<|\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
 regex_select_alltransactions = (
-    r"""(?P<action>\>|\<)"""
-    r"""(?P<event>[^\s]*)"""
-    r"""(?P<parameter>.*)\r"""
+    r"""(?P<action>\>|\<)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
 )
 regex_select_allevents = r"""(?P<action>\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
 regex_select_stcstl = r"""(?P<action>\>|\<)(?P<event>STC:STL)\r"""
@@ -100,11 +98,11 @@ regex_sid = re.compile(
 # )
 
 
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-        #   "We interrupt this program to annoy you       #
-        #   and make things generally more irritating."   #
-        #            -Monty Python's Flying Circus        #
-        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#   "We interrupt this program to annoy you       #
+#   and make things generally more irritating."   #
+#            -Monty Python's Flying Circus        #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 
 # ------------------------------------------- #
