@@ -124,7 +124,7 @@ journaldata = regex.findall(wsjdata)
 sessiondata = [list(tuple) for tuple in sessiondata]
 journaldata = [list(tuple) for tuple in journaldata]
 
-# assign user to session
+# assign user to entries
 for session in sessiondata:
     for entry in journaldata:
         if entry[0] == session[0]:
@@ -149,17 +149,6 @@ for entry in journaldata:
 
 for session in sessiondata:
     print(session)
-    # print(
-    #     session[0]
-    #     + " "
-    #     + session[3]
-    #     + " "
-    #     + session[1]
-    #     + " "
-    #     + session[2]
-    #     + " "
-    #     + session[4]
-    # )
 
 print("---")
 
