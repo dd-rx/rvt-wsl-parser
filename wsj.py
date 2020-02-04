@@ -67,11 +67,15 @@ starttime = datetime.now()
 regex_base = r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3})."""
 
 # different selectors
-regex_select_all = r"""(?P<type>\>|\<|\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
-regex_select_alltransactions = r"""(?P<type>\>|\<)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
-regex_select_allevents = r"""(?P<type>\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
-regex_select_stcstl = r"""(?P<type>\>|\<)(?P<event>STC:STL)\r"""
-regex_select_stc = r"""(?P<type>\>|\<)(?P<event>STC)\r"""
+regex_select_all = r"""(?P<action>\>|\<|\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
+regex_select_alltransactions = (
+    r"""(?P<action>\>|\<)"""
+    r"""(?P<event>[^\s]*)"""
+    r"""(?P<parameter>.*)\r"""
+)
+regex_select_allevents = r"""(?P<action>\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
+regex_select_stcstl = r"""(?P<action>\>|\<)(?P<event>STC:STL)\r"""
+regex_select_stc = r"""(?P<action>\>|\<)(?P<event>STC)\r"""
 
 # put the regex together. change the second part
 regex = re.compile(regex_base + regex_select_alltransactions)
@@ -83,27 +87,28 @@ regex_sid = re.compile(
 
 # grab all events/transaction and split into groups. !!! parameter currently always has to leading whitespaces!
 # regex_allevents = re.compile(
-#    r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3}).(?P<type>\>|\<|\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
+#    r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3}).(?P<action>\>|\<|\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
 # )
 # grab only "save local before/after sync" events
 # regex_stcstl = re.compile(
-#    r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3}).(?P<type>\>|\<)(?P<event>STC:STL)\r"""
+#    r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3}).(?P<action>\>|\<)(?P<event>STC:STL)\r"""
 # )
 
 # grab only "save local before/after sync" events
 # regex_stc = re.compile(
-#    r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3}).(?P<type>\>|\<)(?P<event>STC)\r"""
+#    r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3}).(?P<action>\>|\<)(?P<event>STC)\r"""
 # )
 
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-#   "We interrupt this program to annoy you       #
-#   and make things generally more irritating."   #
-#            -Monty Python's Flying Circus        #
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+        #   "We interrupt this program to annoy you       #
+        #   and make things generally more irritating."   #
+        #            -Monty Python's Flying Circus        #
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 
 # ------------------------------------------- #
+
 
 ##  READING DATA
 
@@ -114,45 +119,46 @@ wsjdata = wsj.read()
 wsj.close()
 
 # getting user sessiondata
-sessiondata = regex_sid.findall(wsjdata, re.MULTILINE)
+sessiondata = regex_sid.finditer(wsjdata, re.MULTILINE)
 # getting events (set regex above)
-journaldata = regex.findall(wsjdata)
+journaldata = regex.finditer(wsjdata)
+
 
 ##  processing data
 
-# tuple to list
-sessiondata = [list(tuple) for tuple in sessiondata]
-journaldata = [list(tuple) for tuple in journaldata]
+# regex to dictionary
+sessiondata = [dict(session.groupdict()) for session in sessiondata]
+journaldata = [dict(entry.groupdict()) for entry in journaldata]
 
 # assign user to entries
 for session in sessiondata:
     for entry in journaldata:
-        if entry[0] == session[0]:
-            entry.insert(1, session[3])
-            # event[0] = event[0].replace(event[0], session[3])
+        if entry["sid"] == session["sid"]:
+            entry["user"] = session["user"]
 
-# finessing data | #TODO refactoring needed check: https://www.geeksforgeeks.org/python-iterate-multiple-lists-simultaneously/
+# finessing the data
 for session in sessiondata:
-    session[1] = datetime.strptime(session[1], "%Y-%m-%d").date()
-    session[2] = datetime.strptime(session[2], "%H:%M:%S").time()
+    session["date"] = datetime.strptime(session["date"], "%Y-%m-%d").date()
+    session["time"] = datetime.strptime(session["time"], "%H:%M:%S").time()
 for entry in journaldata:
-    entry[2] = datetime.strptime(entry[2], "%Y-%m-%d").date()
-    entry[3] = datetime.strptime(entry[3], "%H:%M:%S").time()
+    entry["date"] = datetime.strptime(entry["date"], "%Y-%m-%d").date()
+    entry["time"] = datetime.strptime(entry["time"], "%H:%M:%S").time()
 
-    if entry[6]:
-        entry[6] = entry[6][2:]
+    if entry["parameter"]:
+        entry["parameter"] = entry["parameter"][2:]
+
 
 # ------------------------------------------- #
 
 
 ##  DELIVERING RESULTS
 
-for session in sessiondata:
+for session in sessiondata[-3:]:
     print(session)
 
 print("---")
 
-for entry in journaldata[-10:]:  # [-10:] last 10 entries
+for entry in journaldata[-100:-95]:  # [-10:] last 10 entries
     print(entry)
 
 # print([list(i) for i in journaldata])
