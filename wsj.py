@@ -114,7 +114,7 @@ regex_sid = re.compile(
 
 # read WorkSharingJournal
 # !!! opening UCS-2-LE .slog as UTF-16-LE ... *duck&run*
-wsj = codecs.open(r"""path""", "r", encoding="utf-16")
+wsj = codecs.open(r"""./sampledata/realsample.slog""", "r", encoding="utf-16")
 wsjdata = wsj.read()
 wsj.close()
 
@@ -122,7 +122,7 @@ wsj.close()
 sessiondata = regex_sid.finditer(wsjdata, re.MULTILINE)
 # getting events (set regex above)
 journaldata = regex.finditer(wsjdata)
-
+wsjdata = 0
 
 ##  processing data
 
@@ -141,31 +141,46 @@ for session in sessiondata:
     session["date"] = datetime.strptime(session["date"], "%Y-%m-%d").date()
     session["time"] = datetime.strptime(session["time"], "%H:%M:%S").time()
 
-synctocentral=[]
-#syncposition=0
-logposition=0
+synctocentral = []
+logposition = 0
 for entry in journaldata:
     entry["date"] = datetime.strptime(entry["date"], "%Y-%m-%d").date()
     entry["time"] = datetime.strptime(entry["time"], "%H:%M:%S").time()
 
-    entry['index']=logposition
+    entry["index"] = logposition
 
-    if entry['action']=='>' and entry['event'] =='STC':
-        synctocentral.append({'syncstart': logposition,'syncend':''})
-        #syncposition+=1
-    if entry['action']=='<' and entry['event'] =='STC':
+    if entry["action"] == ">" and entry["event"] == "STC":
+        synctocentral.append({"syncstart": logposition, "syncend": ""})
+
+    if entry["action"] == "<" and entry["event"] == "STC":
+
+        print("< STC " + str(logposition))
+
         for sync in synctocentral[::-1]:
-            #issue with two syncs at the same time
-            if not sync['syncend'] and entry['sid'] == journaldata[entry['index']]['sid'] and entry['user']==journaldata[entry['index']]['user']:
-                sync['syncend']=logposition
+            # issue with two syncs at the same time
+            if (
+                not sync["syncend"]
+                and journaldata[sync["syncstart"]]["sid"] == entry["sid"]
+                and journaldata[sync["syncstart"]]["user"] == entry["user"]
+            ):
+                sync["syncend"] = logposition
 
-                syncstart=datetime.combine(journaldata[sync['syncstart']]['date'],journaldata[sync['syncstart']]['time'])
-                syncend=datetime.combine(journaldata[sync['syncend']]['date'],journaldata[sync['syncend']]['time'])
-                sync['syncduration']= syncend - syncstart
+                print("IFFed " + str(logposition))
+
+                tmpsyncstart = datetime.combine(
+                    journaldata[sync["syncstart"]]["date"],
+                    journaldata[sync["syncstart"]]["time"],
+                )
+                tmpsyncend = datetime.combine(
+                    journaldata[sync["syncend"]]["date"],
+                    journaldata[sync["syncend"]]["time"],
+                )
+                sync["syncduration"] = tmpsyncend - tmpsyncstart
 
     logposition += 1
-#    if entry["parameter"]:
-#        entry["parameter"] = entry["parameter"][2:]
+
+    if entry["parameter"]:
+        entry["parameter"] = entry["parameter"][2:]
 
 
 # ------------------------------------------- #
@@ -173,34 +188,73 @@ for entry in journaldata:
 
 ##  DELIVERING RESULTS
 
-for session in sessiondata[-10:]: # [-10:] last 10 entries
-    print(str(session['date'])+' '+str(session['time'])+' | '+session['build']+' | '+session['sid']+' '+session['user'])
+for session in sessiondata[-10:]:  # [-10:] last 10 entries
+    print(
+        str(session["date"])
+        + " "
+        + str(session["time"])
+        + " | "
+        + session["build"]
+        + " | "
+        + session["sid"]
+        + " "
+        + session["user"]
+    )
 
 print("---")
 
 for entry in journaldata[-20:]:  # [-10:] last 10 entries
-    #print(entry)
-    #if entry['user']=='marco.wild':
+    # print(entry)
+    # if entry['user']=='marco.wild':
     #    print(str(entry['date'])+' '+str(entry['time'])+' | '+entry['action']+'  '+entry['event']+' | '+entry['sid']+' '+entry['user']+' | '+str(entry['index']))
-    print(str(entry['date'])+' '+str(entry['time'])+' | '+entry['action']+'  '+entry['event']+' | '+entry['sid']+' '+entry['user']+' | '+str(entry['index']))
+    print(
+        str(entry["date"])
+        + " "
+        + str(entry["time"])
+        + " | "
+        + entry["action"]
+        + "  "
+        + entry["event"]
+        + " | "
+        + entry["sid"]
+        + " "
+        + entry["user"]
+        + " | "
+        + str(entry["index"])
+    )
 
 print("---")
 # print([list(i) for i in journaldata])
-#print(synctocentral)
+# print(synctocentral)
 for entry in synctocentral[-20:]:
-    #print(entry)
-    #print(entry['syncduration'].total_seconds())
+    # print(entry)
+    # print(entry['syncduration'].total_seconds())
     print(
-        str(journaldata[entry['syncstart']]['date'])+' '+str(journaldata[entry['syncstart']]['time'])+' - '
-        +str(journaldata[entry['syncend']]['time'])+' :: '
-        +str(int(entry['syncduration'].total_seconds()))+'s | '
-        +journaldata[entry['syncstart']]['event']+' | '
-        +journaldata[entry['syncstart']]['sid']+' '+journaldata[entry['syncstart']]['user']+' @ '+str(journaldata[entry['syncstart']]['index'])+' :: '
-        +journaldata[entry['syncend']]['sid']+' '+journaldata[entry['syncend']]['user']+' @ '+str(journaldata[entry['syncend']]['index'])
+        str(journaldata[entry["syncstart"]]["date"])
+        + " "
+        + str(journaldata[entry["syncstart"]]["time"])
+        + " - "
+        + str(journaldata[entry["syncend"]]["time"])
+        + " :: "
+        + str(int(entry["syncduration"].total_seconds()))
+        + "s | "
+        + journaldata[entry["syncstart"]]["event"]
+        + " | "
+        + journaldata[entry["syncstart"]]["sid"]
+        + " "
+        + journaldata[entry["syncstart"]]["user"]
+        + " @ "
+        + str(journaldata[entry["syncstart"]]["index"])
+        + " :: "
+        + journaldata[entry["syncend"]]["sid"]
+        + " "
+        + journaldata[entry["syncend"]]["user"]
+        + " @ "
+        + str(journaldata[entry["syncend"]]["index"])
     )
-    #print(journaldata[entry['syncstart']])
-    #print(journaldata[entry['syncend']])
-    #print(str(journaldata[entry['syncstart']]['date'])+' '+str(journaldata[entry['syncstart']]['time'])+' | '+journaldata[entry['syncstart']]['action']+'  '+journaldata[entry['syncstart']]['event']+' | '+journaldata[entry['syncstart']]['sid']+' '+journaldata[entry['syncstart']]['user']+' | '+str(journaldata[entry['syncstart']]['index']))
+    # print(journaldata[entry['syncstart']])
+    # print(journaldata[entry['syncend']])
+    # print(str(journaldata[entry['syncstart']]['date'])+' '+str(journaldata[entry['syncstart']]['time'])+' | '+journaldata[entry['syncstart']]['action']+'  '+journaldata[entry['syncstart']]['event']+' | '+journaldata[entry['syncstart']]['sid']+' '+journaldata[entry['syncstart']]['user']+' | '+str(journaldata[entry['syncstart']]['index']))
 
 # ------------------------------------------- #
 
