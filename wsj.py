@@ -153,9 +153,6 @@ for entry in journaldata:
         synctocentral.append({"syncstart": logposition, "syncend": ""})
 
     if entry["action"] == "<" and entry["event"] == "STC":
-
-        print("< STC " + str(logposition))
-
         for sync in synctocentral[::-1]:
             # issue with two syncs at the same time
             if (
@@ -164,8 +161,6 @@ for entry in journaldata:
                 and journaldata[sync["syncstart"]]["user"] == entry["user"]
             ):
                 sync["syncend"] = logposition
-
-                print("IFFed " + str(logposition))
 
                 tmpsyncstart = datetime.combine(
                     journaldata[sync["syncstart"]]["date"],
@@ -176,6 +171,7 @@ for entry in journaldata:
                     journaldata[sync["syncend"]]["time"],
                 )
                 sync["syncduration"] = tmpsyncend - tmpsyncstart
+
 
     logposition += 1
 
