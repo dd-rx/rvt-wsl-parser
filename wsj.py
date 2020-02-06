@@ -172,7 +172,6 @@ for entry in journaldata:
                 )
                 sync["syncduration"] = tmpsyncend - tmpsyncstart
 
-
     logposition += 1
 
     if entry["parameter"]:
