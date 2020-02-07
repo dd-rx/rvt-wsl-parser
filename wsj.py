@@ -14,7 +14,7 @@
 #   contact mail@ddrx.ch
 #   repo https://bitbucket.org/ddrx/revit-worksharingjournal-reader/
 
-#   last updated: 06/02/2020
+#   last updated: 07/02/2020
 
 
 ##  DESCRIPTION
