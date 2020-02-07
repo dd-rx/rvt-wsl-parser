@@ -166,7 +166,7 @@ for entry in journaldata:
 
     journalentry += 1
 
-    #clean up two leading spaces in parameter
+    # clean up two leading spaces in parameter
     if entry["parameter"]:
         entry["parameter"] = entry["parameter"][2:]
 
