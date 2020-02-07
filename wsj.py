@@ -45,9 +45,11 @@
 # ------------------------------------------- #
 
 ##  IMPORTS
+
 import re
 import codecs
 from datetime import datetime
+
 
 # ------------------------------------------- #
 
@@ -75,8 +77,8 @@ regex_select_allevents = r"""(?P<action>\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"
 regex_select_stcstl = r"""(?P<action>\>|\<)(?P<event>STC:STL)\r"""
 regex_select_stc = r"""(?P<action>\>|\<)(?P<event>STC)\r"""
 regex_select_stcstcstl = r"""(?P<action>\>|\<)(?P<event>STC|STC:STL)\r"""
-
 regex_select_allstc = r"""(?P<action>\>|\<)(?P<event>STC.*)\r"""
+
 # put the regex together. change the second part
 regex = re.compile(regex_base + regex_select_alltransactions)
 
@@ -84,20 +86,6 @@ regex = re.compile(regex_base + regex_select_alltransactions)
 regex_sid = re.compile(
     r"""(?P<sid>\$.[0-9a-fA-F]{7}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2}).*\n\s\buser\=.(?P<user>\b.*\b).*\n\s\bbuild\=.(?P<build>\b.*\b.).*\n\s\bjournal\=.(?P<journal>\b.*\b).*\n\s\bhost\=(?P<host>.*.)\r"""
 )
-
-# grab all events/transaction and split into groups. !!! parameter currently always has to leading whitespaces!
-# regex_allevents = re.compile(
-#    r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3}).(?P<action>\>|\<|\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
-# )
-# grab only "save local before/after sync" events
-# regex_stcstl = re.compile(
-#    r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3}).(?P<action>\>|\<)(?P<event>STC:STL)\r"""
-# )
-
-# grab only "save local before/after sync" events
-# regex_stc = re.compile(
-#    r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3}).(?P<action>\>|\<)(?P<event>STC)\r"""
-# )
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
@@ -108,7 +96,6 @@ regex_sid = re.compile(
 
 
 # ------------------------------------------- #
-
 
 ##  READING DATA
 
@@ -122,46 +109,51 @@ wsj.close()
 sessiondata = regex_sid.finditer(wsjdata, re.MULTILINE)
 # getting events (set regex above)
 journaldata = regex.finditer(wsjdata)
+# clear raw data
 wsjdata = 0
 
-##  processing data
+
+##  PROCESSING DATA
 
 # regex to dictionary
 sessiondata = [dict(session.groupdict()) for session in sessiondata]
 journaldata = [dict(entry.groupdict()) for entry in journaldata]
 
-# assign user to entries
+
+# finessing the sessiondata
 for session in sessiondata:
+    # add user to journalevents
     for entry in journaldata:
         if entry["sid"] == session["sid"]:
             entry["user"] = session["user"]
-
-# finessing the data
-for session in sessiondata:
+    # date/time formatting
     session["date"] = datetime.strptime(session["date"], "%Y-%m-%d").date()
     session["time"] = datetime.strptime(session["time"], "%H:%M:%S").time()
 
+
+# finessing the journaldata
 synctocentral = []
-logposition = 0
+journalentry = 0
+
 for entry in journaldata:
+    # date/time formatting
     entry["date"] = datetime.strptime(entry["date"], "%Y-%m-%d").date()
     entry["time"] = datetime.strptime(entry["time"], "%H:%M:%S").time()
-
-    entry["index"] = logposition
-
+    # assign index
+    entry["index"] = journalentry
+    # get beginning of sync event
     if entry["action"] == ">" and entry["event"] == "STC":
-        synctocentral.append({"syncstart": logposition, "syncend": ""})
-
+        synctocentral.append({"syncstart": journalentry, "syncend": ""})
+    # get end of sync event
     if entry["action"] == "<" and entry["event"] == "STC":
         for sync in synctocentral[::-1]:
-            # issue with two syncs at the same time
             if (
                 not sync["syncend"]
                 and journaldata[sync["syncstart"]]["sid"] == entry["sid"]
                 and journaldata[sync["syncstart"]]["user"] == entry["user"]
             ):
-                sync["syncend"] = logposition
-
+                sync["syncend"] = journalentry
+                # calculate syncduration
                 tmpsyncstart = datetime.combine(
                     journaldata[sync["syncstart"]]["date"],
                     journaldata[sync["syncstart"]]["time"],
@@ -172,14 +164,14 @@ for entry in journaldata:
                 )
                 sync["syncduration"] = tmpsyncend - tmpsyncstart
 
-    logposition += 1
+    journalentry += 1
 
+    #clean up two leading spaces in parameter
     if entry["parameter"]:
         entry["parameter"] = entry["parameter"][2:]
 
 
 # ------------------------------------------- #
-
 
 ##  DELIVERING RESULTS
 
@@ -250,6 +242,7 @@ for entry in synctocentral[-20:]:
     # print(journaldata[entry['syncstart']])
     # print(journaldata[entry['syncend']])
     # print(str(journaldata[entry['syncstart']]['date'])+' '+str(journaldata[entry['syncstart']]['time'])+' | '+journaldata[entry['syncstart']]['action']+'  '+journaldata[entry['syncstart']]['event']+' | '+journaldata[entry['syncstart']]['sid']+' '+journaldata[entry['syncstart']]['user']+' | '+str(journaldata[entry['syncstart']]['index']))
+
 
 # ------------------------------------------- #
 
