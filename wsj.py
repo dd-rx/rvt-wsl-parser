@@ -14,7 +14,7 @@
 #   contact mail@ddrx.ch
 #   repo https://bitbucket.org/ddrx/revit-worksharingjournal-reader/
 
-#   last updated: 06/02/2020
+#   last updated: 11/02/2020
 
 
 ##  DESCRIPTION
@@ -80,7 +80,7 @@ regex_select_stcstcstl = r"""(?P<action>\>|\<)(?P<event>STC|STC:STL)\r"""
 regex_select_allstc = r"""(?P<action>\>|\<)(?P<event>STC.*)\r"""
 
 # put the regex together. change the second part
-regex = re.compile(regex_base + regex_select_alltransactions)
+regex = re.compile(regex_base + regex_select_all)
 
 # grab session informations to assign user to sessionID, also get build version and the host....
 regex_sid = re.compile(
@@ -133,26 +133,28 @@ for session in sessiondata:
 
 # finessing the journaldata
 synctocentral = []
-journalentry = 0
 
-for entry in journaldata:
+for index, entry in enumerate(journaldata):
     # date/time formatting
     entry["date"] = datetime.strptime(entry["date"], "%Y-%m-%d").date()
     entry["time"] = datetime.strptime(entry["time"], "%H:%M:%S").time()
     # assign index
-    entry["index"] = journalentry
+    entry["index"] = index
     # get beginning of sync event
     if entry["action"] == ">" and entry["event"] == "STC":
-        synctocentral.append({"syncstart": journalentry, "syncend": ""})
-    # get end of sync event
+        synctocentral.append({"syncstart": index, "syncend": ""})
+    # get end of sync event | #TODO how to detect unfinished syncs??
     if entry["action"] == "<" and entry["event"] == "STC":
+        # TODO how stupid is it to assume there is only one open syncronisation per user so i can stop matching after first hmatch when going thru the list backwards..?!
+        hit = 0
         for sync in synctocentral[::-1]:
             if (
                 not sync["syncend"]
                 and journaldata[sync["syncstart"]]["sid"] == entry["sid"]
-                and journaldata[sync["syncstart"]]["user"] == entry["user"]
+                # and journaldata[sync["syncstart"]]["user"] == entry["user"] # unnecessary
+                and not hit
             ):
-                sync["syncend"] = journalentry
+                sync["syncend"] = index
                 # calculate syncduration
                 tmpsyncstart = datetime.combine(
                     journaldata[sync["syncstart"]]["date"],
@@ -163,8 +165,7 @@ for entry in journaldata:
                     journaldata[sync["syncend"]]["time"],
                 )
                 sync["syncduration"] = tmpsyncend - tmpsyncstart
-
-    journalentry += 1
+                hit = 1
 
     # clean up two leading spaces in parameter
     if entry["parameter"]:
