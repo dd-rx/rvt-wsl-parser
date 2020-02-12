@@ -12,7 +12,7 @@
 
 #   copyright 2020 by m.wild for ddrx
 #   contact mail@ddrx.ch
-#   repo https://bitbucket.org/ddrx/revit-worksharingjournal-reader/
+#   public repo https://bitbucket.org/ddrx/revit-worksharingjournal-reader/
 
 #   last updated: 12/02/2020
 
