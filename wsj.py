@@ -54,6 +54,7 @@ from datetime import datetime
 # ------------------------------------------- #
 
 ##  SET UP TIMER
+import wsl as wsl
 
 starttime = datetime.now()
 
@@ -79,6 +80,8 @@ regex_select_stc = r"""(?P<action>\>|\<)(?P<event>STC)\r"""
 regex_select_stcstcstl = r"""(?P<action>\>|\<)(?P<event>STC|STC:STL)\r"""
 regex_select_allstc = r"""(?P<action>\>|\<)(?P<event>STC.*)\r"""
 
+regex_housekeeping = re.compile(r"""(?P<name>\b_[a-zA-Z0-9]+[a-zA-Z0-9_]*[a-zA-Z0-9])""")
+
 # put the regex together. change the second part
 regex = re.compile(regex_base + regex_select_all)
 
@@ -101,18 +104,21 @@ regex_sid = re.compile(
 
 # read WorkSharingJournal
 # !!! opening UCS-2-LE .slog as UTF-16-LE ... *duck&run*
-wsj = codecs.open(r"""./sampledata/realsample.slog""", "r", encoding="utf-16")
+wsj = codecs.open(r"""./sampledata/sample.slog""", "r", encoding="utf-16")
 wsjdata = wsj.read()
 wsj.close()
-# clear readbuffer
-wsl = 0
+# housekeeping
+del wsj
 
 # getting user sessiondata
 sessiondata = regex_sid.finditer(wsjdata, re.MULTILINE)
 # getting events (set regex above)
 journaldata = regex.finditer(wsjdata)
-# clear raw data
-wsjdata = 0
+
+# housekeeping
+del regex
+del regex_sid
+del wsjdata
 
 
 ##  PROCESSING DATA
@@ -132,6 +138,40 @@ for _session in sessiondata:
     _session["date"] = datetime.strptime(_session["date"], "%Y-%m-%d").date()
     _session["time"] = datetime.strptime(_session["time"], "%H:%M:%S").time()
 
+#del _session
+#del _entry
+
+#print(len(globals()))
+#print(dir())
+
+# def maid(input):
+#     housekeeping = regex_housekeeping.finditer(str(input))
+#     housekeeping= [dict(_var.groupdict()) for _var in housekeeping]
+#     print(len(dir()))
+#     print(housekeeping)
+#     for _var in housekeeping:
+#         print(_var['name'])
+#         if _var['name']!='_frozen_importlib_external':
+#             del globals()[_var['name']]
+#     print(len(dir()))
+#     print(housekeeping)
+#     #del _var, housekeeping
+
+#unfinished housmaid
+housekeeping = regex_housekeeping.finditer(str(globals()))
+housekeeping= [dict(_var.groupdict()) for _var in housekeeping]
+print(len(dir()))
+print(dir())
+for _var in housekeeping:
+    print(_var['name'])
+    if _var['name']!='_frozen_importlib_external':
+        del globals()[_var['name']]
+del _var, housekeeping
+print(len(dir()))
+print(dir())
+#del _var, housekeeping
+
+breakpoint()
 
 # finessing the journaldata
 synctocentral = []
@@ -148,13 +188,11 @@ for _index, _entry in enumerate(journaldata):
     # get end of sync event | #TODO how to detect unfinished syncs??
     if _entry["action"] == "<" and _entry["event"] == "STC":
         # TODO how stupid is it to assume there is only one open syncronisation per user so i can stop matching after first hmatch when going thru the list backwards..?!
-        _hit = 0
         for _sync in synctocentral[::-1]:
             if (
                 not _sync["syncend"]
                 and journaldata[_sync["syncstart"]]["sid"] == _entry["sid"]
                 # and journaldata[sync["syncstart"]]["user"] == entry["user"] # unnecessary
-                and not _hit
             ):
                 _sync["syncend"] = _index
                 # calculate syncduration
@@ -167,7 +205,8 @@ for _index, _entry in enumerate(journaldata):
                     journaldata[_sync["syncend"]]["time"],
                 )
                 _sync["syncduration"] = _tmpsyncend - _tmpsyncstart
-                _hit = 1
+
+                break
 
     # clean up two leading spaces in parameter
     if _entry["parameter"]:
@@ -190,7 +229,10 @@ for _session in sessiondata[-10:]:  # [-10:] last 10 entries
         + " "
         + _session["user"]
     )
-
+    #print('::::')
+    #print(f'{_session["date"]}  user:{_session["user"]}')
+print('kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk')
+print(_session)
 print("---")
 
 for _entry in journaldata[-20:]:  # [-10:] last 10 entries
@@ -246,8 +288,15 @@ for _entry in synctocentral[-20:]:
     # print(journaldata[entry['syncend']])
     # print(str(journaldata[entry['syncstart']]['date'])+' '+str(journaldata[entry['syncstart']]['time'])+' | '+journaldata[entry['syncstart']]['action']+'  '+journaldata[entry['syncstart']]['event']+' | '+journaldata[entry['syncstart']]['sid']+' '+journaldata[entry['syncstart']]['user']+' | '+str(journaldata[entry['syncstart']]['index']))
 
+#print(globals())
+
+#for _var in globals():
+#    print(_var)
+#del _var
 
 # ------------------------------------------- #
+del journaldata
+del sessiondata
 
 ##  PRINT RUNTIME
 
