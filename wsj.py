@@ -12,7 +12,7 @@
 
 #   copyright 2020 by m.wild for ddrx
 #   contact mail@ddrx.ch
-#   public repo https://bitbucket.org/ddrx/revit-worksharingjournal-reader/
+#   public  repo https://bitbucket.org/ddrx/revit-worksharingjournal-reader/
 
 #   last updated: 12/02/2020
 
@@ -23,9 +23,11 @@
 #   this is a parser vor revit worksharingjournals (*.slog) to make it human-readable.
 #   later it should allow to disect the data by user or event and get timing on events.
 #
-#   Autodesk Knowledge Network: https://knowledge.autodesk.com/support/revit-products/troubleshooting/caas/simplecontent/content/how-to-read-the-revit-worksharing-log-slog-file.html
+#   Autodesk Knowledge Network:
+#   https://knowledge.autodesk.com/support/revit-products/troubleshooting/caas/simplecontent/content/how-to-read-the-revit-worksharing-log-slog-file.html
 #
 #   variables starting with _ are meant for temporary use in loops and functions
+#   for readability using dictionaries instead of lists
 
 ##  LICENSE AGREEMENT
 
@@ -70,9 +72,7 @@ def CalculateDuration(_start, _end):
     # calculate syncduration
     _tmpstart = datetime.combine(_start["date"], _start["time"])
     _tmpend = datetime.combine(_end["date"], _end["time"])
-
     _duration = _tmpend - _tmpstart
-
     return _duration
 
 
@@ -83,7 +83,7 @@ def SessionOverview(_sessiondata, _v=3):
                 f'{_session["date"]}, {_session["time"]} | {_session["sid"]} {_session["user"]} - {_session["build"]} {_session["host"]}'
             )
     elif _v == 2:
-        for _session in _sessiondata[_from:_to:_step]:  # [-10:] last 10 entries
+        for _session in _sessiondata:  # [-10:] last 10 entries
             print(
                 str(_session["date"])
                 + ", "
@@ -102,7 +102,6 @@ def SessionOverview(_sessiondata, _v=3):
 # ------------------------------------------- #
 
 ##  SET UP TIMER
-import wsl as wsl
 
 starttime = datetime.now()
 
