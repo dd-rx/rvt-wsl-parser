@@ -25,6 +25,7 @@
 #
 #   Autodesk Knowledge Network: https://knowledge.autodesk.com/support/revit-products/troubleshooting/caas/simplecontent/content/how-to-read-the-revit-worksharing-log-slog-file.html
 #
+#   variables starting with _ are meant for temporary use in loops and functions
 
 ##  LICENSE AGREEMENT
 
@@ -49,6 +50,53 @@
 import re
 import codecs
 from datetime import datetime
+
+
+## FUNCTIONS
+
+
+def RegexToDict(_input):
+    _dict = [dict(_session.groupdict()) for _session in _input]
+    return _dict
+
+
+def FormatDateTime(_date, _time):
+    _date = datetime.strptime(_date, "%Y-%m-%d").date()
+    _time = datetime.strptime(_time, "%H:%M:%S").time()
+    return _date, _time
+
+
+def CalculateDuration(_start, _end):
+    # calculate syncduration
+    _tmpstart = datetime.combine(_start["date"], _start["time"])
+    _tmpend = datetime.combine(_end["date"], _end["time"])
+
+    _duration = _tmpend - _tmpstart
+
+    return _duration
+
+
+def SessionOverview(_sessiondata, _v=3):
+    if _v == 3:
+        for _session in _sessiondata:
+            print(
+                f'{_session["date"]}, {_session["time"]} | {_session["sid"]} {_session["user"]} - {_session["build"]} {_session["host"]}'
+            )
+    elif _v == 2:
+        for _session in _sessiondata[_from:_to:_step]:  # [-10:] last 10 entries
+            print(
+                str(_session["date"])
+                + ", "
+                + str(_session["time"])
+                + " | "
+                + _session["sid"]
+                + " "
+                + _session["user"]
+                + " - "
+                + _session["build"]
+                + " "
+                + _session["host"]
+            )
 
 
 # ------------------------------------------- #
@@ -80,7 +128,7 @@ regex_select_stc = r"""(?P<action>\>|\<)(?P<event>STC)\r"""
 regex_select_stcstcstl = r"""(?P<action>\>|\<)(?P<event>STC|STC:STL)\r"""
 regex_select_allstc = r"""(?P<action>\>|\<)(?P<event>STC.*)\r"""
 
-regex_housekeeping = re.compile(r"""(?P<name>\b_[a-zA-Z0-9]+[a-zA-Z0-9_]*[a-zA-Z0-9])""")
+# regex_housekeeping = re.compile(r"""(?P<name>\b_[a-zA-Z0-9]+[a-zA-Z0-9_]*[a-zA-Z0-9])""")
 
 # put the regex together. change the second part
 regex = re.compile(regex_base + regex_select_all)
@@ -124,8 +172,8 @@ del wsjdata
 ##  PROCESSING DATA
 
 # regex to dictionary
-sessiondata = [dict(_session.groupdict()) for _session in sessiondata]
-journaldata = [dict(_entry.groupdict()) for _entry in journaldata]
+sessiondata = RegexToDict(sessiondata)
+journaldata = RegexToDict(journaldata)
 
 
 # finessing the sessiondata
@@ -135,14 +183,15 @@ for _session in sessiondata:
         if _entry["sid"] == _session["sid"]:
             _entry["user"] = _session["user"]
     # date/time formatting
-    _session["date"] = datetime.strptime(_session["date"], "%Y-%m-%d").date()
-    _session["time"] = datetime.strptime(_session["time"], "%H:%M:%S").time()
+    _session["date"], _session["time"] = FormatDateTime(
+        _session["date"], _session["time"]
+    )
 
-#del _session
-#del _entry
+del _session
+del _entry
 
-#print(len(globals()))
-#print(dir())
+# print(len(globals()))
+# print(dir())
 
 # def maid(input):
 #     housekeeping = regex_housekeeping.finditer(str(input))
@@ -157,34 +206,41 @@ for _session in sessiondata:
 #     print(housekeeping)
 #     #del _var, housekeeping
 
-#unfinished housmaid
-housekeeping = regex_housekeeping.finditer(str(globals()))
-housekeeping= [dict(_var.groupdict()) for _var in housekeeping]
-print(len(dir()))
-print(dir())
-for _var in housekeeping:
-    print(_var['name'])
-    if _var['name']!='_frozen_importlib_external':
-        del globals()[_var['name']]
-del _var, housekeeping
-print(len(dir()))
-print(dir())
-#del _var, housekeeping
+# unfinished housmaid
+# housekeeping = regex_housekeeping.finditer(str(globals()))
+# housekeeping= [dict(_var.groupdict()) for _var in housekeeping]
+# print(len(dir()))
+# print(dir())
+# for _var in housekeeping:
+#     print(_var['name'])
+#     if _var['name']!='_frozen_importlib_external':
+#         del globals()[_var['name']]
+# del _var, housekeeping
+# print(len(dir()))
+# print(dir())
+# #del _var, housekeeping
+#
+# breakpoint()
 
-breakpoint()
 
-# finessing the journaldata
 synctocentral = []
 
+# finessing the journaldata
 for _index, _entry in enumerate(journaldata):
     # date/time formatting
-    _entry["date"] = datetime.strptime(_entry["date"], "%Y-%m-%d").date()
-    _entry["time"] = datetime.strptime(_entry["time"], "%H:%M:%S").time()
+    _entry["date"], _entry["time"] = FormatDateTime(_entry["date"], _entry["time"])
+
     # assign index
     _entry["index"] = _index
+
+    # clean up two leading spaces in parameter
+    if _entry["parameter"]:
+        _entry["parameter"] = _entry["parameter"][2:]
+
     # get beginning of sync event
     if _entry["action"] == ">" and _entry["event"] == "STC":
         synctocentral.append({"syncstart": _index, "syncend": ""})
+
     # get end of sync event | #TODO how to detect unfinished syncs??
     if _entry["action"] == "<" and _entry["event"] == "STC":
         # TODO how stupid is it to assume there is only one open syncronisation per user so i can stop matching after first hmatch when going thru the list backwards..?!
@@ -192,53 +248,26 @@ for _index, _entry in enumerate(journaldata):
             if (
                 not _sync["syncend"]
                 and journaldata[_sync["syncstart"]]["sid"] == _entry["sid"]
-                # and journaldata[sync["syncstart"]]["user"] == entry["user"] # unnecessary
             ):
                 _sync["syncend"] = _index
+
                 # calculate syncduration
-                _tmpsyncstart = datetime.combine(
-                    journaldata[_sync["syncstart"]]["date"],
-                    journaldata[_sync["syncstart"]]["time"],
+                _sync["syncduration"] = CalculateDuration(
+                    journaldata[_sync["syncstart"]], journaldata[_sync["syncend"]]
                 )
-                _tmpsyncend = datetime.combine(
-                    journaldata[_sync["syncend"]]["date"],
-                    journaldata[_sync["syncend"]]["time"],
-                )
-                _sync["syncduration"] = _tmpsyncend - _tmpsyncstart
 
                 break
-
-    # clean up two leading spaces in parameter
-    if _entry["parameter"]:
-        _entry["parameter"] = _entry["parameter"][2:]
 
 
 # ------------------------------------------- #
 
 ##  DELIVERING RESULTS
 
-for _session in sessiondata[-10:]:  # [-10:] last 10 entries
-    print(
-        str(_session["date"])
-        + " "
-        + str(_session["time"])
-        + " | "
-        + _session["build"]
-        + " | "
-        + _session["sid"]
-        + " "
-        + _session["user"]
-    )
-    #print('::::')
-    #print(f'{_session["date"]}  user:{_session["user"]}')
-print('kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk')
-print(_session)
+SessionOverview(sessiondata)
+
 print("---")
 
 for _entry in journaldata[-20:]:  # [-10:] last 10 entries
-    # print(entry)
-    # if entry['user']=='marco.wild':
-    #    print(str(entry['date'])+' '+str(entry['time'])+' | '+entry['action']+'  '+entry['event']+' | '+entry['sid']+' '+entry['user']+' | '+str(entry['index']))
     print(
         str(_entry["date"])
         + " "
@@ -256,11 +285,8 @@ for _entry in journaldata[-20:]:  # [-10:] last 10 entries
     )
 
 print("---")
-# print([list(i) for i in journaldata])
-# print(synctocentral)
+
 for _entry in synctocentral[-20:]:
-    # print(entry)
-    # print(entry['syncduration'].total_seconds())
     print(
         str(journaldata[_entry["syncstart"]]["date"])
         + " "
@@ -284,17 +310,10 @@ for _entry in synctocentral[-20:]:
         + " @ "
         + str(journaldata[_entry["syncend"]]["index"])
     )
-    # print(journaldata[entry['syncstart']])
-    # print(journaldata[entry['syncend']])
-    # print(str(journaldata[entry['syncstart']]['date'])+' '+str(journaldata[entry['syncstart']]['time'])+' | '+journaldata[entry['syncstart']]['action']+'  '+journaldata[entry['syncstart']]['event']+' | '+journaldata[entry['syncstart']]['sid']+' '+journaldata[entry['syncstart']]['user']+' | '+str(journaldata[entry['syncstart']]['index']))
 
-#print(globals())
-
-#for _var in globals():
-#    print(_var)
-#del _var
 
 # ------------------------------------------- #
+# housekeeping
 del journaldata
 del sessiondata
 
