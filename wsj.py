@@ -76,26 +76,67 @@ def CalculateDuration(_start, _end):
     return _duration
 
 
-def SessionOverview(_sessiondata, _v=3):
-    if _v == 3:
-        for _session in _sessiondata:
+def SessionOverview(_sessiondata, _v=2):
+    # if _v == 3:
+    #     for _session in _sessiondata:
+    #         print(
+    #             f'{_session["date"]}, {_session["time"]} | {_session["sid"]} {_session["user"]} - {_session["build"]} {_session["host"]}'
+    #         )
+    # elif _v == 2:
+    #     for _session in _sessiondata:  # [-10:] last 10 entries
+    #         print(
+    #             str(_session["date"])
+    #             + ", "
+    #             + str(_session["time"])
+    #             + " | "
+    #             + _session["sid"]
+    #             + " "
+    #             + _session["user"]
+    #             + " - "
+    #             + _session["build"]
+    #             + " "
+    #             + _session["host"]
+    #         )
+    print('SESSIONS:')
+    for _session in _sessiondata:  # [-10:] last 10 entries
+        print(
+            str(_session["date"])
+            + ", "
+            + str(_session["time"])
+            + " | "
+            + _session["sid"]
+            + " "
+            + _session["user"]
+            + " - "
+            + _session["build"]
+            + " "
+            + _session["host"]
+        )
+
+    if crashes:
+        print('CRASHES:')
+        for _crash in crashes:
             print(
-                f'{_session["date"]}, {_session["time"]} | {_session["sid"]} {_session["user"]} - {_session["build"]} {_session["host"]}'
-            )
-    elif _v == 2:
-        for _session in _sessiondata:  # [-10:] last 10 entries
-            print(
-                str(_session["date"])
+                str(journaldata[_crash["crash"]]["date"])
                 + ", "
-                + str(_session["time"])
+                + str(journaldata[_crash["crash"]]["time"])
                 + " | "
-                + _session["sid"]
+                + journaldata[_crash["crash"]]["sid"]
                 + " "
-                + _session["user"]
-                + " - "
-                + _session["build"]
+                + journaldata[_crash["crash"]]["user"]
+            )
+    
+    if reconnects:
+        print('RECONNECTS:')
+        for _reconnect in reconnects:
+            print(
+                str(journaldata[_reconnect["reconnect"]]["date"])
+                + ", "
+                + str(journaldata[_reconnect["reconnect"]]["time"])
+                + " | "
+                + journaldata[_reconnect["reconnect"]]["sid"]
                 + " "
-                + _session["host"]
+                + journaldata[_reconnect["reconnect"]]["user"]
             )
 
 
@@ -222,7 +263,10 @@ del _entry
 # breakpoint()
 
 
-synctocentral = []
+syncstocentral = []
+crashes = []
+reconnects = []
+
 
 # finessing the journaldata
 for _index, _entry in enumerate(journaldata):
@@ -238,12 +282,11 @@ for _index, _entry in enumerate(journaldata):
 
     # get beginning of sync event
     if _entry["action"] == ">" and _entry["event"] == "STC":
-        synctocentral.append({"syncstart": _index, "syncend": ""})
-
+        syncstocentral.append({"syncstart": _index, "syncend": ""})
     # get end of sync event | #TODO how to detect unfinished syncs??
-    if _entry["action"] == "<" and _entry["event"] == "STC":
+    elif _entry["action"] == "<" and _entry["event"] == "STC":
         # TODO how stupid is it to assume there is only one open syncronisation per user so i can stop matching after first hmatch when going thru the list backwards..?!
-        for _sync in synctocentral[::-1]:
+        for _sync in syncstocentral[::-1]:
             if (
                 not _sync["syncend"]
                 and journaldata[_sync["syncstart"]]["sid"] == _entry["sid"]
@@ -256,7 +299,12 @@ for _index, _entry in enumerate(journaldata):
                 )
 
                 break
+    # report crash
+    if _entry["action"] == ">" and _entry["event"] == "Crash":
+        crashes.append({"crash": _index})
 
+    if _entry["event"] == "ReConnectInMiddle":
+        reconnects.append({"reconnect": _index})
 
 # ------------------------------------------- #
 
@@ -285,7 +333,7 @@ for _entry in journaldata[-20:]:  # [-10:] last 10 entries
 
 print("---")
 
-for _entry in synctocentral[-20:]:
+for _entry in syncstocentral[-3:]:
     print(
         str(journaldata[_entry["syncstart"]]["date"])
         + " "
