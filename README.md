@@ -26,3 +26,4 @@ ___
 ---
 [![gitlab](https://img.shields.io/badge/main-gitlab-lightgrey?style=flat-square&logo=GitLab&logoColor=white)](https://git.ddrx.ch/ddrx/revit-worksharingjournal-reader)
 [![bitbucket](https://img.shields.io/badge/mirror-bitbucket-lightgrey?style=flat-square&logo=Bitbucket&logoColor=white)](https://bitbucket.org/%7B447fac70-6865-48c1-9f3c-d3f45dea8388%7D/)
+[![github](https://img.shields.io/badge/mirror-github-lightgrey?style=flat-square&logo=github&logoColor=white)](https://github.com/dd-rx/rvt-wsl-parser)
