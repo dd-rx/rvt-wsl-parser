@@ -14,7 +14,8 @@
 #   contact mail@ddrx.ch
 #   public  repo https://bitbucket.org/ddrx/revit-worksharingjournal-reader/
 
-#   last updated: 12/02/2020
+#   last updated: m.wild 16/02/2020
+#   ^ this header may not be removed - only extended.
 
 
 ##  DESCRIPTION
@@ -52,6 +53,7 @@
 import re
 import codecs
 from datetime import datetime
+import csv
 
 
 ## FUNCTIONS
@@ -59,6 +61,7 @@ from datetime import datetime
 
 def RegexToDict(_input):
     _dict = [dict(_session.groupdict()) for _session in _input]
+    del _input
     return _dict
 
 
@@ -76,7 +79,7 @@ def CalculateDuration(_start, _end):
     return _duration
 
 
-def SessionOverview(_sessiondata, _v=2):
+def DeliverSessionSummary(_sessiondata):
     # if _v == 3:
     #     for _session in _sessiondata:
     #         print(
@@ -97,7 +100,7 @@ def SessionOverview(_sessiondata, _v=2):
     #             + " "
     #             + _session["host"]
     #         )
-    print('SESSIONS:')
+    print("SESSIONS:")
     for _session in _sessiondata:  # [-10:] last 10 entries
         print(
             str(_session["date"])
@@ -114,7 +117,7 @@ def SessionOverview(_sessiondata, _v=2):
         )
 
     if crashes:
-        print('CRASHES:')
+        print("CRASHES:")
         for _crash in crashes:
             print(
                 str(journaldata[_crash["crash"]]["date"])
@@ -127,7 +130,7 @@ def SessionOverview(_sessiondata, _v=2):
             )
 
     if reconnects:
-        print('RECONNECTS:')
+        print("RECONNECTS:")
         for _reconnect in reconnects:
             print(
                 str(journaldata[_reconnect["reconnect"]]["date"])
@@ -138,6 +141,101 @@ def SessionOverview(_sessiondata, _v=2):
                 + " "
                 + journaldata[_reconnect["reconnect"]]["user"]
             )
+    del _sessiondata
+
+
+def DeliverSessionDuration():
+    # this can be messy if you have users computer go to standby - revit then re-opens a session with the same sid
+    for _sessionmetaindex, _sessionmeta in enumerate(sessions):
+        if _sessionmeta["sessionend"]:
+
+            # for readability, create a shorthandle for the data in sessiondata and journaldata
+            _sessiondatalink = sessiondata[sessions[_sessionmetaindex]["sessionstart"]]
+            _journaldatalink = journaldata[sessions[_sessionmetaindex]["sessionend"]]
+
+            # calculate session duration
+            _sessionduration = CalculateDuration(_sessiondatalink, _journaldatalink)
+
+            print(
+                f'{_sessiondatalink["date"]} '
+                f'{_sessiondatalink["time"]} '
+                f'{_sessiondatalink["sid"]} '
+                f'{_sessiondatalink["user"]}  |  '
+                f"{_sessionduration}  |  "
+                f'{_journaldatalink["date"]} '
+                f'{_journaldatalink["time"]} '
+                f'{_journaldatalink["sid"]} '
+                f'{_journaldatalink["user"]}'
+            )
+
+            # housekeeping
+            del _sessiondatalink, _journaldatalink, _sessionduration
+
+        elif not _sessionmeta["sessionend"]:
+            _unfinishedsessionwarning = 1
+
+            # for readability, create a shorthandle for the data in sessiondata
+            _sessiondatalink = sessiondata[sessions[_sessionmetaindex]["sessionstart"]]
+
+            # for _crash in crashes:
+            #     if journaldata[_crash['crash']]['sid'] == _sessiondatalink['sid']:
+            #         pass
+
+            print(
+                f'{_sessiondatalink["date"]} '
+                f'{_sessiondatalink["time"]} '
+                f'{_sessiondatalink["sid"]} '
+                f'{_sessiondatalink["user"]}  |  '
+                f"no endpoint found..?!"
+            )
+
+            # housekeeping
+            del _sessiondatalink
+
+    if _unfinishedsessionwarning:
+        print(f"\nsessions without endpoint are either still active")
+        print(f"or client computer went into standby mode and came back")
+        print(f"in which case revit opens a new session with the same sid")
+
+        # housekeeping
+        del _unfinishedsessionwarning
+
+    del _sessionmetaindex, _sessionmeta
+
+
+
+def ExportCSV(_data,_filename,_delimiter=','):
+
+    if _data == 'worksharing':
+        with open(_filename, mode='w', newline='') as _tmpcsv:
+            _header = ['index', 'sid', 'user', 'date', 'time', 'action', 'event', 'parameter']
+            _export = csv.DictWriter(_tmpcsv, fieldnames=_header, delimiter=_delimiter)
+
+            _export.writeheader()
+
+            for _entry in journaldata:
+                _export.writerow(_entry)
+
+        del _tmpcsv, _header, _export, _entry
+
+    elif _data == 'session':
+        #TODO add sessionduration
+        with open(_filename, mode='w', newline='') as _tmpcsv:
+            _header = ['sid', 'user', 'date', 'time', 'build', 'host', 'journal']
+            _export = csv.DictWriter(_tmpcsv, fieldnames=_header, delimiter=_delimiter)
+
+            _export.writeheader()
+
+            for _session in sessiondata:
+                _export.writerow(_session)
+
+        del _tmpcsv, _header, _export, _session
+
+    elif _data == 'sync':
+        pass
+
+    #_data = 0
+    #del __data, _filename, delimiter
 
 
 
@@ -159,20 +257,8 @@ starttime = datetime.now()
 # regex_base is reused for all patterns. gets sessionid date time
 regex_base = r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3})."""
 
-# different selectors
 regex_select_all = r"""(?P<action>\>|\<|\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
-regex_select_alltransactions = (
-    r"""(?P<action>\>|\<)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
-)
-regex_select_allevents = r"""(?P<action>\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
-regex_select_stcstl = r"""(?P<action>\>|\<)(?P<event>STC:STL)\r"""
-regex_select_stc = r"""(?P<action>\>|\<)(?P<event>STC)\r"""
-regex_select_stcstcstl = r"""(?P<action>\>|\<)(?P<event>STC|STC:STL)\r"""
-regex_select_allstc = r"""(?P<action>\>|\<)(?P<event>STC.*)\r"""
 
-# regex_housekeeping = re.compile(r"""(?P<name>\b_[a-zA-Z0-9]+[a-zA-Z0-9_]*[a-zA-Z0-9])""")
-
-# put the regex together. change the second part
 regex = re.compile(regex_base + regex_select_all)
 
 # grab session informations to assign user to sessionID, also get build version and the host....
@@ -232,40 +318,9 @@ for _session in sessiondata:
 del _session
 del _entry
 
-# print(len(globals()))
-# print(dir())
-
-# def maid(input):
-#     housekeeping = regex_housekeeping.finditer(str(input))
-#     housekeeping= [dict(_var.groupdict()) for _var in housekeeping]
-#     print(len(dir()))
-#     print(housekeeping)
-#     for _var in housekeeping:
-#         print(_var['name'])
-#         if _var['name']!='_frozen_importlib_external':
-#             del globals()[_var['name']]
-#     print(len(dir()))
-#     print(housekeeping)
-#     #del _var, housekeeping
-
-# unfinished housmaid
-# housekeeping = regex_housekeeping.finditer(str(globals()))
-# housekeeping= [dict(_var.groupdict()) for _var in housekeeping]
-# print(len(dir()))
-# print(dir())
-# for _var in housekeeping:
-#     print(_var['name'])
-#     if _var['name']!='_frozen_importlib_external':
-#         del globals()[_var['name']]
-# del _var, housekeeping
-# print(len(dir()))
-# print(dir())
-# #del _var, housekeeping
-#
-# breakpoint()
-
-
+# lists of connections
 syncstocentral = []
+savelocalbeforesync = []  #
 crashes = []
 reconnects = []
 sessions = []
@@ -273,6 +328,7 @@ sessions = []
 
 # finessing the journaldata
 for _index, _entry in enumerate(journaldata):
+
     # date/time formatting
     _entry["date"], _entry["time"] = FormatDateTime(_entry["date"], _entry["time"])
 
@@ -283,101 +339,90 @@ for _index, _entry in enumerate(journaldata):
     if _entry["parameter"]:
         _entry["parameter"] = _entry["parameter"][2:]
 
-    if _entry['event']=='STC:RL:CFV':
-        print(_entry['parameter'][8:])
-        #_entry["parameter"] = _entry["parameter"][2:]
+    # --- # going for the different events
 
-    # get beginning of sync event
-    if _entry["action"] == ">" and _entry["event"] == "STC":
-        syncstocentral.append({"syncstart": _index, "syncend": ""})
-    # get end of sync event | #TODO how to detect unfinished syncs??
-    elif _entry["action"] == "<" and _entry["event"] == "STC":
-        # TODO how stupid is it to assume there is only one open syncronisation per user so i can stop matching after first hmatch when going thru the list backwards..?!
-        for _sync in syncstocentral[::-1]:
-            if (
-                not _sync["syncend"]
-                and journaldata[_sync["syncstart"]]["sid"] == _entry["sid"]
-            ):
-                _sync["syncend"] = _index
+    # STC:RL:CFV | centralfile generation
+    if _entry["event"] == "STC:RL:CFV":
+        pass
+        # print(_entry['parameter'][8:])
 
-                # calculate syncduration
-                _sync["syncduration"] = CalculateDuration(
-                    journaldata[_sync["syncstart"]], journaldata[_sync["syncend"]]
-                )
+    # STC | get sync events
+    elif _entry["event"] == "STC":
+        if _entry["action"] == ">":
+            syncstocentral.append({"syncstart": _index, "syncend": ""})
+            # break
+        # get end of sync event | #TODO how to detect unfinished syncs??
+        elif _entry["action"] == "<":
+            # TODO how stupid is it to assume there is only one open syncronisation per user so i can stop matching after first hmatch when going thru the list backwards..?!
+            for _sync in syncstocentral[::-1]:
+                if (
+                    not _sync["syncend"]
+                    and journaldata[_sync["syncstart"]]["sid"] == _entry["sid"]
+                ):
+                    _sync["syncend"] = _index
 
-                break
+                    # calculate syncduration
+                    _sync["syncduration"] = CalculateDuration(
+                        journaldata[_sync["syncstart"]], journaldata[_sync["syncend"]]
+                    )
 
-    if _entry["action"] == "<" and _entry["event"] == "Session":
-        for _sessionindex, _session in enumerate(sessiondata):
-            if _entry['sid'] == _session['sid']:
-                sessions.append({"sessionstart": _sessionindex, "sessionend": _index})
-                print(str(_session['time'])+' - '+str(_entry['time']))
-        print(sessions)
+                    # break
+    # Session | get end of session
+    elif _entry["event"] == "Session":
+        if _entry["action"] == ">":
+            for _sessionindex, _session in enumerate(sessiondata):
+                if _entry["sid"] == _session["sid"]:
+                    sessions.append({"sessionstart": _sessionindex, "sessionend": ""})
+        if _entry["action"] == "<":
+            for _sessionmeta in sessions[::-1]:
+                if sessiondata[_sessionmeta["sessionstart"]]["sid"] == _entry["sid"]:
+                    _sessionmeta["sessionend"] = _index
+            #print(sessions)
 
-    # report crash
-    if _entry["action"] == ">" and _entry["event"] == "Crash":
-        crashes.append({"crash": _index})
+    # Crah |report crash
+    elif _entry["event"] == "Crash":
+        if _entry["action"] == ">":
+            crashes.append({"crash": _index})
+    # ReConnectInMiddle | get reconnects
+    elif _entry["event"] == "ReConnectInMiddle":
+        if _entry["action"] == ">":
+            reconnects.append({"reconnect": _index})
+            print("RECONNECT")
 
-    if _entry["event"] == "ReConnectInMiddle":
-        reconnects.append({"reconnect": _index})
+    # sceleton
+    # elif _entry["event"] == "foo":
+    #     if _entry["action"] == ">":
+    #         pass
+    #     elif _enty["action"] == "<":
+    #         pass
+
+    # ^^^ # going for the different events
 
 # ------------------------------------------- #
 
 ##  DELIVERING RESULTS
 
-SessionOverview(sessiondata)
 
-# print("---")
-#
-# for _entry in journaldata[-20:]:  # [-10:] last 10 entries
+#DeliverSessionDuration()
+
+#DeliverSessionSummary(sessiondata)
+
+ExportCSV('worksharing','worksharing.csv')
+ExportCSV('session','session.csv')
+
+# print("------------------")
+# for _sessionmetaindex, _sessionmeta in enumerate(sessions):
 #     print(
-#         str(_entry["date"])
-#         + " "
-#         + str(_entry["time"])
-#         + " | "
-#         + _entry["action"]
-#         + "  "
-#         + _entry["event"]
-#         + " | "
-#         + _entry["sid"]
-#         + " "
-#         + _entry["user"]
-#         + " | "
-#         + str(_entry["index"])
-#     )
-#
-# print("---")
-#
-# for _entry in syncstocentral[-3:]:
-#     print(
-#         str(journaldata[_entry["syncstart"]]["date"])
-#         + " "
-#         + str(journaldata[_entry["syncstart"]]["time"])
-#         + " - "
-#         + str(journaldata[_entry["syncend"]]["time"])
-#         + " :: "
-#         + str(int(_entry["syncduration"].total_seconds()))
-#         + "s | "
-#         + journaldata[_entry["syncstart"]]["event"]
-#         + " | "
-#         + journaldata[_entry["syncstart"]]["sid"]
-#         + " "
-#         + journaldata[_entry["syncstart"]]["user"]
-#         + " @ "
-#         + str(journaldata[_entry["syncstart"]]["index"])
-#         + " :: "
-#         + journaldata[_entry["syncend"]]["sid"]
-#         + " "
-#         + journaldata[_entry["syncend"]]["user"]
-#         + " @ "
-#         + str(journaldata[_entry["syncend"]]["index"])
+#         f'{sessiondata[sessions[_sessionmetaindex]["sessionstart"]]["user"]}{journaldata[sessions[_sessionmetaindex]["sessionend"]]["user"]}'
 #     )
 
+
+print("------------------")
 
 # ------------------------------------------- #
 # housekeeping
 del journaldata
-del sessiondata
+#del sessiondata
 
 ##  PRINT RUNTIME
 
