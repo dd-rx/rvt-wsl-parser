@@ -268,6 +268,7 @@ del _entry
 syncstocentral = []
 crashes = []
 reconnects = []
+sessions = []
 
 
 # finessing the journaldata
@@ -305,6 +306,14 @@ for _index, _entry in enumerate(journaldata):
                 )
 
                 break
+
+    if _entry["action"] == "<" and _entry["event"] == "Session":
+        for _sessionindex, _session in enumerate(sessiondata):
+            if _entry['sid'] == _session['sid']:
+                sessions.append({"sessionstart": _sessionindex, "sessionend": _index})
+                print(str(_session['time'])+' - '+str(_entry['time']))
+        print(sessions)
+
     # report crash
     if _entry["action"] == ">" and _entry["event"] == "Crash":
         crashes.append({"crash": _index})
