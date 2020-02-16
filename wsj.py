@@ -204,9 +204,11 @@ def DeliverSessionDuration():
 
 
 
-def ExportCSV(_data,_filename,_delimiter=','):
+def ExportCSV(_input,_filename,_delimiter=','):
 
-    if _data == 'worksharing':
+    _filename = str(datetime.today().strftime('%Y%m%d'))+'_'+_filename+'.csv'
+
+    if _input == 'worksharing':
         with open(_filename, mode='w', newline='') as _tmpcsv:
             _header = ['index', 'sid', 'user', 'date', 'time', 'action', 'event', 'parameter']
             _export = csv.DictWriter(_tmpcsv, fieldnames=_header, delimiter=_delimiter)
@@ -218,7 +220,7 @@ def ExportCSV(_data,_filename,_delimiter=','):
 
         del _tmpcsv, _header, _export, _entry
 
-    elif _data == 'session':
+    elif _input == 'session':
         #TODO add sessionduration
         with open(_filename, mode='w', newline='') as _tmpcsv:
             _header = ['sid', 'user', 'date', 'time', 'build', 'host', 'journal']
@@ -231,10 +233,10 @@ def ExportCSV(_data,_filename,_delimiter=','):
 
         del _tmpcsv, _header, _export, _session
 
-    elif _data == 'sync':
+    elif _input == 'sync':
         pass
 
-    #_data = 0
+    #_input = 0
     #del __data, _filename, delimiter
 
 
@@ -407,8 +409,8 @@ for _index, _entry in enumerate(journaldata):
 
 #DeliverSessionSummary(sessiondata)
 
-ExportCSV('worksharing','worksharing.csv')
-ExportCSV('session','session.csv')
+ExportCSV('worksharing','worksharing')
+ExportCSV('session','sessions')
 
 # print("------------------")
 # for _sessionmetaindex, _sessionmeta in enumerate(sessions):
