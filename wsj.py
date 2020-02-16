@@ -56,6 +56,7 @@ from datetime import datetime
 import csv
 
 
+
 ## FUNCTIONS
 
 
@@ -259,12 +260,12 @@ starttime = datetime.now()
 # regex_base is reused for all patterns. gets sessionid date time
 regex_base = r"""(?P<sid>\$[0-9a-fA-F]{8}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2})(?:\.[0-9]{3})."""
 
-regex_select_all = r"""(?P<action>\>|\<|\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
+regex_allevents = r"""(?P<action>\>|\<|\.)(?P<event>[^\s]*)(?P<parameter>.*)\r"""
 
-regex = re.compile(regex_base + regex_select_all)
+regex = re.compile(regex_base + regex_allevents)
 
 # grab session informations to assign user to sessionID, also get build version and the host....
-regex_sid = re.compile(
+regex_sessiondata = re.compile(
     r"""(?P<sid>\$.[0-9a-fA-F]{7}).(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2}).(?P<time>[0-9]{2}:[0-9]{2}:[0-9]{2}).*\n\s\buser\=.(?P<user>\b.*\b).*\n\s\bbuild\=.(?P<build>\b.*\b.).*\n\s\bjournal\=.(?P<journal>\b.*\b).*\n\s\bhost\=(?P<host>.*.)\r"""
 )
 
@@ -289,13 +290,13 @@ wsj.close()
 del wsj
 
 # getting user sessiondata
-sessiondata = regex_sid.finditer(wsjdata, re.MULTILINE)
+sessiondata = regex_sessiondata.finditer(wsjdata, re.MULTILINE)
 # getting events (set regex above)
 journaldata = regex.finditer(wsjdata)
 
 # housekeeping
 del regex
-del regex_sid
+del regex_sessiondata
 del wsjdata
 
 
@@ -317,6 +318,7 @@ for _session in sessiondata:
         _session["date"], _session["time"]
     )
 
+#housekeeping
 del _session
 del _entry
 
