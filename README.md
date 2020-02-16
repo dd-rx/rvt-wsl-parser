@@ -5,19 +5,36 @@
 
 
 
-
-##### revit-worksharingjournal-reader
-
-
-
-
-
-simple tool to make the revit worksharingjournal human-readable.
-
-
+## revit-worksharing-log parser
 
 ![what for](https://img.shields.io/badge/use_with-Revit-yellow?style=flat-square&logo=ipfs&logoColor=white)
 ![who for](https://img.shields.io/badge/user-BIM--Manager-yellow?style=flat-square&logo=tapas&logoColor=white)
+![requires python > 3.6](https://img.shields.io/badge/requires-python%20%3E3.6-lightgrey?style=flat-square&logo=graphql&logoColor=white)
+[![requires python < 3.6 with future-fstings](https://img.shields.io/badge/requires-python%20%3C%203.6%20%2B%20future--fstrings-lightgrey?style=flat-square&logo=graphql&logoColor=white)](https://img.shields.io/badge/requires-python%20%3C%203.6%20%2B%20future--fstrings-lightgrey)
+---
+
+
+simple tool to make the revit worksharingjournal human-readable
+by either simply exporting the revit worksharing log as a .csv file that can be analyzed in excel or some quick summaries in the console.
+
+#### usage
+
+`>>>wslparser.py export sync 'x:\some\path\your-worksharingjournal.slog'`
+`>>>wslparser.py` _`mode` `dataset` `'path'`_
+
+- mode
+  * `export` exports the selected dataset as `[date]_[model].csv` file in the same location as the revit .slog file.
+  * `show` this option gives you a quick look at some summaries.
+- dataset select which events to export.
+  * `sessions` `sessions-detailed` `syncs` `syncs-detailed`
+- path
+  * path to the revit .slog file. either full path or relative. must be in quotes.
+
+_because i used fstrings for easier formatting of console output you need python >3.6 or [future-fstrings](https://img.shields.io/badge/requires-python%20%3C%203.6%20%2B%20future--fstrings-lightgrey) for console usage.
+csv export is unaffected by this._
+
+_in case you need a portable version of python that works without installing or administrative privileges, [winpython](https://winpython.github.io/) is for you._
+
 ___
 [![PyCharm](https://img.shields.io/badge/IDE-PyCharm-yellowgreen?style=flat-square&logo=jetbrains&logoColor=white)](https://www.jetbrains.com/pycharm/)
 [![Made with Python](https://img.shields.io/badge/made%20with-python-yellowgreen.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
