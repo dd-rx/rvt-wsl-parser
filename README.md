@@ -20,8 +20,8 @@ by either simply exporting the revit worksharing log as a .csv file that can be 
 #### usage
 
 `>>>wslparser.py export sync 'x:\some\path\your-worksharingjournal.slog'`
-`>>>wslparser.py` _`mode` `dataset` `'path'`_
 
+`>>>wslparser.py` _`mode` `dataset` `'path'`_
 - mode
   * `export` exports the selected dataset as `[date]_[model].csv` file in the same location as the revit .slog file.
   * `show` this option gives you a quick look at some summaries.
