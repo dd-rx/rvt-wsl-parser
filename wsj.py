@@ -125,7 +125,7 @@ def SessionOverview(_sessiondata, _v=2):
                 + " "
                 + journaldata[_crash["crash"]]["user"]
             )
-    
+
     if reconnects:
         print('RECONNECTS:')
         for _reconnect in reconnects:
@@ -138,6 +138,8 @@ def SessionOverview(_sessiondata, _v=2):
                 + " "
                 + journaldata[_reconnect["reconnect"]]["user"]
             )
+
+
 
 
 # ------------------------------------------- #
@@ -280,6 +282,10 @@ for _index, _entry in enumerate(journaldata):
     if _entry["parameter"]:
         _entry["parameter"] = _entry["parameter"][2:]
 
+    if _entry['event']=='STC:RL:CFV':
+        print(_entry['parameter'][8:])
+        #_entry["parameter"] = _entry["parameter"][2:]
+
     # get beginning of sync event
     if _entry["action"] == ">" and _entry["event"] == "STC":
         syncstocentral.append({"syncstart": _index, "syncend": ""})
@@ -312,51 +318,51 @@ for _index, _entry in enumerate(journaldata):
 
 SessionOverview(sessiondata)
 
-print("---")
-
-for _entry in journaldata[-20:]:  # [-10:] last 10 entries
-    print(
-        str(_entry["date"])
-        + " "
-        + str(_entry["time"])
-        + " | "
-        + _entry["action"]
-        + "  "
-        + _entry["event"]
-        + " | "
-        + _entry["sid"]
-        + " "
-        + _entry["user"]
-        + " | "
-        + str(_entry["index"])
-    )
-
-print("---")
-
-for _entry in syncstocentral[-3:]:
-    print(
-        str(journaldata[_entry["syncstart"]]["date"])
-        + " "
-        + str(journaldata[_entry["syncstart"]]["time"])
-        + " - "
-        + str(journaldata[_entry["syncend"]]["time"])
-        + " :: "
-        + str(int(_entry["syncduration"].total_seconds()))
-        + "s | "
-        + journaldata[_entry["syncstart"]]["event"]
-        + " | "
-        + journaldata[_entry["syncstart"]]["sid"]
-        + " "
-        + journaldata[_entry["syncstart"]]["user"]
-        + " @ "
-        + str(journaldata[_entry["syncstart"]]["index"])
-        + " :: "
-        + journaldata[_entry["syncend"]]["sid"]
-        + " "
-        + journaldata[_entry["syncend"]]["user"]
-        + " @ "
-        + str(journaldata[_entry["syncend"]]["index"])
-    )
+# print("---")
+#
+# for _entry in journaldata[-20:]:  # [-10:] last 10 entries
+#     print(
+#         str(_entry["date"])
+#         + " "
+#         + str(_entry["time"])
+#         + " | "
+#         + _entry["action"]
+#         + "  "
+#         + _entry["event"]
+#         + " | "
+#         + _entry["sid"]
+#         + " "
+#         + _entry["user"]
+#         + " | "
+#         + str(_entry["index"])
+#     )
+#
+# print("---")
+#
+# for _entry in syncstocentral[-3:]:
+#     print(
+#         str(journaldata[_entry["syncstart"]]["date"])
+#         + " "
+#         + str(journaldata[_entry["syncstart"]]["time"])
+#         + " - "
+#         + str(journaldata[_entry["syncend"]]["time"])
+#         + " :: "
+#         + str(int(_entry["syncduration"].total_seconds()))
+#         + "s | "
+#         + journaldata[_entry["syncstart"]]["event"]
+#         + " | "
+#         + journaldata[_entry["syncstart"]]["sid"]
+#         + " "
+#         + journaldata[_entry["syncstart"]]["user"]
+#         + " @ "
+#         + str(journaldata[_entry["syncstart"]]["index"])
+#         + " :: "
+#         + journaldata[_entry["syncend"]]["sid"]
+#         + " "
+#         + journaldata[_entry["syncend"]]["user"]
+#         + " @ "
+#         + str(journaldata[_entry["syncend"]]["index"])
+#     )
 
 
 # ------------------------------------------- #
