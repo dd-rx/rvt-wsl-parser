@@ -18,15 +18,15 @@ simple tool to make the revit worksharingjournal human-readable
 by either simply exporting the revit worksharing log as a .csv file that can be analyzed in excel or some quick summaries in the console.
 
 #### usage
-
+#### **_this readme is ahead of how the script works ;-)_**
 `>>>wslparser.py export sync 'x:\some\path\your-worksharingjournal.slog'`
 
 `>>>wslparser.py` _`mode` `dataset` `'path'`_
 - mode
   * `export` exports the selected dataset as `[date]_[model].csv` file in the same location as the revit .slog file.
   * `show` this option gives you a quick look at some summaries.
-- dataset select which events to export.
-  * `sessions` `sessions-detailed` `syncs` `syncs-detailed`
+- dataset
+  * select which events to export. `sessions` `sessions-detailed` `syncs` `syncs-detailed`
 - path
   * path to the revit .slog file. either full path or relative. must be in quotes.
 
