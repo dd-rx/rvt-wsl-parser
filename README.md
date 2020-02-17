@@ -6,6 +6,7 @@
 ## revit-worksharing-log parser
 
 ![what for](https://img.shields.io/badge/use_with-Revit-yellow?style=flat-square&logo=ipfs&logoColor=white)
+![who for](https://img.shields.io/badge/user-Revit--Support-yellow?style=flat-square&logo=tapas&logoColor=white)
 ![who for](https://img.shields.io/badge/user-BIM--Manager-yellow?style=flat-square&logo=tapas&logoColor=white)
 ![requires python > 3.6](https://img.shields.io/badge/requires-python%20%3E3.6-lightgrey?style=flat-square&logo=graphql&logoColor=white)
 [![requires python < 3.6 with future-fstings](https://img.shields.io/badge/requires-python%20%3C%203.6%20%2B%20future--fstrings-lightgrey?style=flat-square&logo=graphql&logoColor=white)](https://img.shields.io/badge/requires-python%20%3C%203.6%20%2B%20future--fstrings-lightgrey)
@@ -33,7 +34,8 @@ _because i used fstrings for easier formatting of console output you need python
 csv export is unaffected by this._
 
 _in case you need a portable version of python that works without installing or administrative privileges, [winpython](https://winpython.github.io/) is for you._
-
+___
+reference: [Autodesk Knowledge Network: How to read the Revit Worksharing Log .SLOG file](https://knowledge.autodesk.com/support/revit-products/troubleshooting/caas/simplecontent/content/how-to-read-the-revit-worksharing-log-slog-file.html)
 ___
 [![PyCharm](https://img.shields.io/badge/IDE-PyCharm-yellowgreen?style=flat-square&logo=jetbrains&logoColor=white)](https://www.jetbrains.com/pycharm/)
 [![Made with Python](https://img.shields.io/badge/made%20with-python_3.7.5-yellowgreen.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
