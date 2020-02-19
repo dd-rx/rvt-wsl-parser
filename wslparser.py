@@ -176,7 +176,6 @@ def ProcessJournaldata():
                             journaldata[_sync["syncend"]],
                         )
 
-                        # break
         # Session | get end of session
         elif _entry["event"] == "Session":
             if _entry["action"] == ">":
@@ -204,7 +203,7 @@ def ProcessJournaldata():
                 _reconnects_links.append({"reconnect": _index})
                 print("RECONNECT")
 
-        # sceleton
+        # skeleton
         # elif _entry["event"] == "foo":
         #     if _entry["action"] == ">":
         #         pass
