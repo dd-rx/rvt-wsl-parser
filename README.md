@@ -43,6 +43,6 @@ ___
 [![PEP8](https://img.shields.io/badge/code%20style-pep8-black.svg?style=flat-square&logo=styled-components&logoColor=white)](https://www.python.org/dev/peps/pep-0008/)
 [![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square&logo=gnu&logoColor=white)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 ---
-[![gitlab](https://img.shields.io/badge/main-gitlab-lightgrey?style=flat-square&logo=GitLab&logoColor=white)](https://git.ddrx.ch/ddrx/revit-worksharingjournal-reader)
-[![bitbucket](https://img.shields.io/badge/mirror-bitbucket-lightgrey?style=flat-square&logo=Bitbucket&logoColor=white)](https://bitbucket.org/%7B447fac70-6865-48c1-9f3c-d3f45dea8388%7D/)
-[![github](https://img.shields.io/badge/mirror-github-lightgrey?style=flat-square&logo=github&logoColor=white)](https://github.com/dd-rx/rvt-wsl-parser)
+[![gitlab](https://img.shields.io/badge/main-gitlab-lightgrey?style=flat-square&logo=GitLab&logoColor=white)](https://git.ddrx.ch/ddrx/rvt-wsl-parser/)
+[![bitbucket](https://img.shields.io/badge/mirror-bitbucket-lightgrey?style=flat-square&logo=Bitbucket&logoColor=white)](https://bitbucket.org/ddrx/rvt-wsl-parser/)
+[![github](https://img.shields.io/badge/mirror-github-lightgrey?style=flat-square&logo=github&logoColor=white)](https://github.com/dd-rx/rvt-wsl-parser/)
