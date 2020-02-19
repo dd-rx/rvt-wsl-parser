@@ -12,6 +12,7 @@
 
 #   copyright 2020 by m.wild for ddrx
 #   contact mail@ddrx.ch
+
 #   main repo   https://bitbucket.org/ddrx/rvt-wsl-parser/
 #   mirror repo https://bitbucket.org/ddrx/rvt-wsl-parser/
 #   mirror repo https://github.com/dd-rx/rvt-wsl-parser/
