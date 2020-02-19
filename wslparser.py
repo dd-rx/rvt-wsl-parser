@@ -12,9 +12,9 @@
 
 #   copyright 2020 by m.wild for ddrx
 #   contact mail@ddrx.ch
-#   main repo   https://bitbucket.org/ddrx/revit-worksharingjournal-reader/
-#   mirror repo https://bitbucket.org/%7B447fac70-6865-48c1-9f3c-d3f45dea8388%7D/
-#   mirror repo https://github.com/dd-rx/rvt-wsl-parser
+#   main repo   https://bitbucket.org/ddrx/rvt-wsl-parser/
+#   mirror repo https://bitbucket.org/ddrx/rvt-wsl-parser/
+#   mirror repo https://github.com/dd-rx/rvt-wsl-parser/
 
 #   last updated: m.wild 19/02/2020
 #   ^ this header may not be removed - only extended.
