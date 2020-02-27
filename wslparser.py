@@ -222,137 +222,137 @@ def ProcessJournaldata():
 
 
 # output
-def DeliverSessionSummary(_sessiondata):
-    # if _v == 3:
-    #     for _session in _sessiondata:
-    #         print(
-    #             f'{_session["date"]}, {_session["time"]} | {_session["sid"]} {_session["user"]} - {_session["build"]} {_session["host"]}'
-    #         )
-    # elif _v == 2:
-    #     for _session in _sessiondata:  # [-10:] last 10 entries
-    #         print(
-    #             str(_session["date"])
-    #             + ", "
-    #             + str(_session["time"])
-    #             + " | "
-    #             + _session["sid"]
-    #             + " "
-    #             + _session["user"]
-    #             + " - "
-    #             + _session["build"]
-    #             + " "
-    #             + _session["host"]
-    #         )
-    print("SESSIONS:")
-    for _session in _sessiondata:  # [-10:] last 10 entries
-        print(
-            str(_session["date"])
-            + ", "
-            + str(_session["time"])
-            + " | "
-            + _session["sid"]
-            + " "
-            + _session["user"]
-            + " - "
-            + _session["build"]
-            + " "
-            + _session["host"]
-        )
-
-    if crashes:
-        print("CRASHES:")
-        for _crash in crashes:
-            print(
-                str(journaldata[_crash["crash"]]["date"])
-                + ", "
-                + str(journaldata[_crash["crash"]]["time"])
-                + " | "
-                + journaldata[_crash["crash"]]["sid"]
-                + " "
-                + journaldata[_crash["crash"]]["user"]
-            )
-
-    if reconnects:
-        print("RECONNECTS:")
-        for _reconnect in reconnects:
-            print(
-                str(journaldata[_reconnect["reconnect"]]["date"])
-                + ", "
-                + str(journaldata[_reconnect["reconnect"]]["time"])
-                + " | "
-                + journaldata[_reconnect["reconnect"]]["sid"]
-                + " "
-                + journaldata[_reconnect["reconnect"]]["user"]
-            )
-    del _sessiondata
-
-
-def DeliverSessionDuration():
-    # this can be messy if you have users computer go to standby - revit then re-opens a session with the same sid
-    for _sessionmetaindex, _sessionmeta in enumerate(sessions):
-        if _sessionmeta["sessionend"]:
-
-            # for readability, create a shorthandle for the data in sessiondata and journaldata
-            _sessiondatalink = sessiondata[sessions[_sessionmetaindex]["sessionstart"]]
-            _journaldatalink = journaldata[sessions[_sessionmetaindex]["sessionend"]]
-
-            # calculate session duration
-            _sessionduration = CalculateDuration(_sessiondatalink, _journaldatalink)
-
-            print(
-                f'{_sessiondatalink["date"]} '
-                f'{_sessiondatalink["time"]} '
-                f'{_sessiondatalink["sid"]} '
-                f'{_sessiondatalink["user"]}  |  '
-                f"{_sessionduration}  |  "
-                f'{_journaldatalink["date"]} '
-                f'{_journaldatalink["time"]} '
-                f'{_journaldatalink["sid"]} '
-                f'{_journaldatalink["user"]}'
-            )
-
-            # housekeeping
-            del _sessiondatalink, _journaldatalink, _sessionduration
-
-        elif not _sessionmeta["sessionend"]:
-            _unfinishedsessionwarning = 1
-
-            # for readability, create a shorthandle for the data in sessiondata
-            _sessiondatalink = sessiondata[sessions[_sessionmetaindex]["sessionstart"]]
-
-            # for _crash in crashes:
-            #     if journaldata[_crash['crash']]['sid'] == _sessiondatalink['sid']:
-            #         pass
-
-            print(
-                f'{_sessiondatalink["date"]} '
-                f'{_sessiondatalink["time"]} '
-                f'{_sessiondatalink["sid"]} '
-                f'{_sessiondatalink["user"]}  |  '
-                f"no endpoint found..?!"
-            )
-
-            # housekeeping
-            del _sessiondatalink
-
-    if _unfinishedsessionwarning:
-        print(f"\nsessions without endpoint are either still active")
-        print(f"or client computer went into standby mode and came back")
-        print(f"in which case revit opens a new session with the same sid")
-
-        # housekeeping
-        del _unfinishedsessionwarning
-
-    del _sessionmetaindex, _sessionmeta
+# def DeliverSessionSummary(_sessiondata):
+#     # if _v == 3:
+#     #     for _session in _sessiondata:
+#     #         print(
+#     #             f'{_session["date"]}, {_session["time"]} | {_session["sid"]} {_session["user"]} - {_session["build"]} {_session["host"]}'
+#     #         )
+#     # elif _v == 2:
+#     #     for _session in _sessiondata:  # [-10:] last 10 entries
+#     #         print(
+#     #             str(_session["date"])
+#     #             + ", "
+#     #             + str(_session["time"])
+#     #             + " | "
+#     #             + _session["sid"]
+#     #             + " "
+#     #             + _session["user"]
+#     #             + " - "
+#     #             + _session["build"]
+#     #             + " "
+#     #             + _session["host"]
+#     #         )
+#     print("SESSIONS:")
+#     for _session in _sessiondata:  # [-10:] last 10 entries
+#         print(
+#             str(_session["date"])
+#             + ", "
+#             + str(_session["time"])
+#             + " | "
+#             + _session["sid"]
+#             + " "
+#             + _session["user"]
+#             + " - "
+#             + _session["build"]
+#             + " "
+#             + _session["host"]
+#         )
+#
+#     if crashes:
+#         print("CRASHES:")
+#         for _crash in crashes:
+#             print(
+#                 str(journaldata[_crash["crash"]]["date"])
+#                 + ", "
+#                 + str(journaldata[_crash["crash"]]["time"])
+#                 + " | "
+#                 + journaldata[_crash["crash"]]["sid"]
+#                 + " "
+#                 + journaldata[_crash["crash"]]["user"]
+#             )
+#
+#     if reconnects:
+#         print("RECONNECTS:")
+#         for _reconnect in reconnects:
+#             print(
+#                 str(journaldata[_reconnect["reconnect"]]["date"])
+#                 + ", "
+#                 + str(journaldata[_reconnect["reconnect"]]["time"])
+#                 + " | "
+#                 + journaldata[_reconnect["reconnect"]]["sid"]
+#                 + " "
+#                 + journaldata[_reconnect["reconnect"]]["user"]
+#             )
+#     del _sessiondata
+#
+#
+# def DeliverSessionDuration():
+#     # this can be messy if you have users computer go to standby - revit then re-opens a session with the same sid
+#     for _sessionmetaindex, _sessionmeta in enumerate(sessions):
+#         if _sessionmeta["sessionend"]:
+#
+#             # for readability, create a shorthandle for the data in sessiondata and journaldata
+#             _sessiondatalink = sessiondata[sessions[_sessionmetaindex]["sessionstart"]]
+#             _journaldatalink = journaldata[sessions[_sessionmetaindex]["sessionend"]]
+#
+#             # calculate session duration
+#             _sessionduration = CalculateDuration(_sessiondatalink, _journaldatalink)
+#
+#             print(
+#                 f'{_sessiondatalink["date"]} '
+#                 f'{_sessiondatalink["time"]} '
+#                 f'{_sessiondatalink["sid"]} '
+#                 f'{_sessiondatalink["user"]}  |  '
+#                 f"{_sessionduration}  |  "
+#                 f'{_journaldatalink["date"]} '
+#                 f'{_journaldatalink["time"]} '
+#                 f'{_journaldatalink["sid"]} '
+#                 f'{_journaldatalink["user"]}'
+#             )
+#
+#             # housekeeping
+#             del _sessiondatalink, _journaldatalink, _sessionduration
+#
+#         elif not _sessionmeta["sessionend"]:
+#             _unfinishedsessionwarning = 1
+#
+#             # for readability, create a shorthandle for the data in sessiondata
+#             _sessiondatalink = sessiondata[sessions[_sessionmetaindex]["sessionstart"]]
+#
+#             # for _crash in crashes:
+#             #     if journaldata[_crash['crash']]['sid'] == _sessiondatalink['sid']:
+#             #         pass
+#
+#             print(
+#                 f'{_sessiondatalink["date"]} '
+#                 f'{_sessiondatalink["time"]} '
+#                 f'{_sessiondatalink["sid"]} '
+#                 f'{_sessiondatalink["user"]}  |  '
+#                 f"no endpoint found..?!"
+#             )
+#
+#             # housekeeping
+#             del _sessiondatalink
+#
+#     if _unfinishedsessionwarning:
+#         print(f"\nsessions without endpoint are either still active")
+#         print(f"or client computer went into standby mode and came back")
+#         print(f"in which case revit opens a new session with the same sid")
+#
+#         # housekeeping
+#         del _unfinishedsessionwarning
+#
+#     del _sessionmetaindex, _sessionmeta
 
 
 # export
-def ExportCSV(_input, _filename, _delimiter=";"):
+def ExportCSV(_type, _filename, _delimiter=";"):
 
     _filename = str(datetime.today().strftime("%Y%m%d")) + "_" + _filename + ".csv"
 
-    if _input == "worksharing":
-        with open(_filename, mode="w", newline="") as _tmpcsv:
+    if _type == "worksharing":
+        with open(_filename, mode="w", newline='') as _tmpcsv:
             _header = [
                 "index",
                 "sid",
@@ -372,9 +372,9 @@ def ExportCSV(_input, _filename, _delimiter=";"):
 
         del _tmpcsv, _header, _export, _entry
 
-    elif _input == "session":
+    elif _type == "session":
         # TODO add sessionduration
-        with open(_filename, mode="w", newline="") as _tmpcsv:
+        with open(_filename, mode="w", newline='') as _tmpcsv:
             _header = ["sid", "user", "date", "time", "build", "host", "journal"]
             _export = csv.DictWriter(_tmpcsv, fieldnames=_header, delimiter=_delimiter)
 
@@ -385,9 +385,79 @@ def ExportCSV(_input, _filename, _delimiter=";"):
 
         del _tmpcsv, _header, _export, _session
 
-    elif _input == "sync":
+    elif _type == "sync":
         pass
 
+# return dictionary values as concatenated string
+def DictToString(*_dict):
+
+    _dicttostring = str(_dict[0])
+
+    if len(_dict) > 1:
+        for _item in _dict[1:]:
+            _dicttostring += ' '+str(_item)
+
+    return _dicttostring
+
+def ExportTreeview(*_types):
+    _tree = []
+    for _type in _types:
+        if _type == 'session':
+
+            _nodegrouptitle = 'SESSIONS'
+
+            _nodetree = []
+
+            for _index, _session in enumerate(sessiondata):
+
+                _sessionnode = DictToString(_session['date'], _session['time'], _session['sid'], _session['user'])
+                #print(_sessionnode)
+
+                _sessionsubnode1 = DictToString(_session['host'])
+                _sessionsubnode2 = DictToString(_session['build'])
+                _sessionsubnode3 = DictToString(_session['journal'])
+                #print(_sessionsubnode1)
+                #print(_sessionsubnode2)
+                #print(_sessionsubnode3)
+
+                _nodetree.append(
+                    {_sessionnode:[
+                        {_index:_sessionsubnode1},{_index:_sessionsubnode2},{_index:_sessionsubnode3}
+                    ]}
+                )
+            print(_nodetree)
+            print(_tree)
+
+        elif _type == 'sync':
+            _nodegrouptitle = 'SYNC TO CENTRAL'
+
+            # _nodetree = []
+            #
+            # for _index, _session in enumerate(syncstocentral):
+            #     _syncnode = DictToString(_session['date'], _session['time'], _session['sid'], _session['user'])
+            #     # print(_sessionnode)
+            #
+            #     _syncsubnode1 = DictToString(_session['host'])
+            #     _syncsubnode2 = DictToString(_session['build'])
+            #     _syncsubnode3 = DictToString(_session['journal'])
+            #     # print(_sessionsubnode1)
+            #     # print(_sessionsubnode2)
+            #     # print(_sessionsubnode3)
+            #
+            #     _nodetree.append(
+            #         {_sessionnode: [
+            #             {_index: _sessionsubnode1}, {_index: _sessionsubnode2}, {_index: _sessionsubnode3}
+            #         ]}
+            #     )
+            # print(_nodetree)
+            _nodetree = {'0':'synclist'}
+            _nodetree = {_nodegrouptitle:_nodetree}
+        #print(_nodetree)
+
+        _tree.append(_nodetree)
+        print(_tree)
+
+    return _tree
 
 
 # ------------------------------------------- #
@@ -431,12 +501,15 @@ ProcessSessiondata()
 
 ##  DELIVERING RESULTS
 
-DeliverSessionDuration()
+#DeliverSessionDuration()
 
-DeliverSessionSummary(sessiondata)
+#DeliverSessionSummary(sessiondata)
 
-ExportCSV("worksharing", "worksharing")
-ExportCSV("session", "sessions")
+ExportTreeview('session','sync')
+
+
+#ExportCSV("worksharing", "worksharing")
+#ExportCSV("session", "sessions")
 
 
 print("------------------")
