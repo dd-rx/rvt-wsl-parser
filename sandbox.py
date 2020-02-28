@@ -29,7 +29,7 @@ from collections import MutableMapping
 class warlock(MutableMapping):
     def __init__(self,debug=0):
         self.map = {} #map ids and user-defined name
-        self.container = {} #objects
+        self.objects = {} #objects
         self.relations = [] #relationships [ ..., [parent, child], ...]
 
         self.containerid = pseudorandomid()
@@ -42,31 +42,38 @@ class warlock(MutableMapping):
 
     def __getitem__(self, _name):
         if self.map[_name]:
+
             if self.debug:
-                print('dbg: __getitem__: _name:{0}; return {1}, {2}, {3}'.format(_name,self.container[self.map[_name]], self.parents(_name), self.children(_name)))
-            return self.container[self.map[_name]], self.parents(_name), self.children(_name)
+                print('dbg: __getitem__: _name:{0}; return {1}, {2}, {3}'.format(_name, self.objects[self.map[_name]], self.parents(_name), self.children(_name)))
+
+            return self.objects[self.map[_name]], self.parents(_name), self.children(_name)
         else:
             raise Exception('{} does not exists!'.format(_name))
 
     def __delitem__(self, key):
         value = self[key]
-        del self.container[key]
+        del self.objects[key]
         self.pop(value, None)
     def __setitem__(self, key, value):
-        self.container[key] = value
+        self.objects[key] = value
     def __iter__(self):
-        return iter(self.container)
+        return iter(self.objects)
     def __len__(self):
-        return len(self.container)
+        return len(self.objects)
     def __repr__(self):
-        return ({type(self).__name__},({self.container}))
+        return ({type(self).__name__},({self.objects}))
 
     def add(self,_name,_object,_parent='none'):
         if _name in self.map:
             raise Exception('{0} already exists in container {1}!'.format(_name,self.containerid))
         else:
-            self.map[_name] = pseudorandomid()
-            self.container[self.map[_name]] = _object
+            _objectid = pseudorandomid()
+            if _objectid in self.objects:
+                _objectid = pseudorandomid()
+            else:
+                self.map[_name] = _objectid
+
+            self.objects[self.map[_name]] = _object
 
             if _parent == 'none':
                 self.relations.append([self.containerid,self.map[_name]])
@@ -75,6 +82,8 @@ class warlock(MutableMapping):
             else:
                 raise Exception('parentobject {} does not exists!'.format(_parent))
 
+            if self.debug:
+                print('dbg: spawned object {0} alias {1}, type: {2}, parent: {3}'.format(self.map[_name], _name, type(self.objects[self.map[_name]]), _parent))
 
     def myparents(self,_name):
         if _name in self.map:
@@ -92,21 +101,39 @@ class warlock(MutableMapping):
 
     def children(self, _parent):  #get children of object
         if self.map[_parent]:
+            _children = []
             for _p,_child in self.relations:
                 if _p == self.map[_parent]:
-                    return _child
+                    _children.append(_child)
+            if _children:
+                return _children
         else:
-            raise Exception('no child object found for {}!'.format(_name))
+            raise Exception('no parent object found called {}!'.format(_name))
 
     def info(self,_name):
         if self.map[_name]:
-            print('container {0} > object {1} alias \'{2}\', child of: {3}  parent of: {4} '.format(self.containerid,self.map[_name],_name,self.parents(_name),self.children(_name)))
+            print('container: {0} > object {1} alias \'{2}\', child of: {3} | parent of: {4} '.format(self.containerid,self.map[_name],_name,self.parents(_name),self.children(_name)))
         else:
             raise Exception('{} does not exists!'.format(_name))
 
     def showall(self):
-        for _containers in self.map:
-            self.info(_containers)
+        if self.objects:
+            print('---')
+            print('showall')
+            for _index, _containers in enumerate(self.map):
+                self.info(_containers)
+            print('{0} objects in container {1}'.format(_index+1,self.containerid))
+            print('self.objects: {}'.format(self.objects))
+            print('self.map: {}'.format(self.map))
+            print('self.relations: {}'.format(self.relations))
+            print('---')
+        else:
+            print('---')
+            print('0 objects in container {}'.format( self.containerid))
+            print('self.objects: {}'.format(self.objects))
+            print('self.map: {}'.format(self.map))
+            print('self.relations: {}'.format(self.relations))
+            print('---')
 
 
 
@@ -119,6 +146,10 @@ _test.add('f6oo', 'abc')
 _test.add('f7oo', 'abc', 'f2oo')
 
 _test.showall()
+
+_test2 = warlock(debug=1)
+_test2.showall()
+
 
 #_test.info('f2oo')
 #_test.info('f3oo')
